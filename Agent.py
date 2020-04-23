@@ -80,6 +80,7 @@ class Agent:
         normal_budget = self.get_budget_expression(self.Budget, cN)
         print(f"Maximising normal for agent {self.Id} in period {period}")
         Q_sol, S_sol = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN)
+        #comment
 
         util_normal = self.UtilityExpr.subs(
             [(e_rate, eN), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol), (Q, Q_sol)])
