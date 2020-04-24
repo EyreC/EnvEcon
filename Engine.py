@@ -1,17 +1,29 @@
-from Agent import *
-from EnvSymbols import *
+from Agent import *  # also imports EnvSymbols, and imports within EnvSymbols
 
-import math as ma
 import random as rand
-import sympy as sp
-from sympy import *
-#init_printing()
-
-
+from tqdm import tqdm
 
 class Engine:
+
     def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN,
                  omega_interval=[0, 0], delta_interval=[0, 0], friend_interval=[0, 0]):
+        """
+        The Engine class represents the social system, composed of agents making decisions between e-commerce delivery
+        options. The Engine has
+
+        :param num_agents:      Number of agents interacting in the model
+        :param price:           Price
+        :param a_interval:      Min/ max bounds of a, preference for consumption (coefficient of ln(Q))
+        :param mu_interval:     Min/ max bounds of mu, preference for savings (coefficient of ln(S))
+        :param income_interval: Min/ max bounds of Y, income
+        :param cG:              Cost per unit of green delivery
+        :param cN:              Cost per unit of normal delivery
+        :param eG:              Emissions per unit of green delivery
+        :param eN:              Emissions per unit of normal delivery
+        :param omega_interval:  Min/ max bounds of omega,
+        :param delta_interval:  Min/ max bounds of delta,
+        :param friend_interval: Min/ max bounds of number of friends,
+        """
 
         ##document variables
         self.Agents = []
@@ -32,7 +44,7 @@ class Engine:
 
     def GenerateAgents(self, num_agents):
         for i in range(num_agents):
-            # _id, a,b,mu, Y, p, friends = []):
+            # _id, a, b, mu, Y, p, friends = []):
             a = rand.uniform(self.A_int[0], self.A_int[1])
             b = 1. - a
             mu = rand.uniform(self.Mu_int[0], self.Mu_int[1])
@@ -42,8 +54,14 @@ class Engine:
 
             agent = Agent(i, a, b, mu, income, self.Price, omega, delta)
             ## todo Justin, random sample
+            # This should be able to do the same job as list set
+            friends2 = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
+                                   rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
+
             friends = list(set([rand.choice(range(num_agents)) for x in
                                 range(rand.choice(range(self.Friend_int[0], self.Friend_int[1])))]))
+            print(friends)
+
             agent.Friends = friends
             self.Agents.append(agent)
 

@@ -1,4 +1,4 @@
-from EnvSymbols import *
+from EnvSymbols import *  # Also imports math and sympy
 
 
 class Agent:
@@ -7,11 +7,11 @@ class Agent:
         """
         Initialises an Agent object with the following attributes:
 
-        :param _id: unique identifier
-        :param a: preference for consumption (coefficient of ln[Q])
-        :param b: preference for savings (coefficient of ln[S])
-        :param mu: eco-consicousness
-        :param Y: income
+        :param _id: Unique identifier
+        :param a: Preference for consumption (coefficient of ln[Q])
+        :param b: Preference for savings (coefficient of ln[S])
+        :param mu: Eco-consicousness
+        :param Y: Income
         :param p: price of green delivery
         :param omega:
         :param delta:
@@ -70,6 +70,14 @@ class Agent:
         self.CurrentUtility = self.compare_plans_social(period, cG, cN, eG, eN, friends)
 
     def get_budget_expression(self, income, cost_of_plan):
+        """
+        The budget constraint is expressed in the form:
+            B = Y - P*Q - S - cost_of_plan
+
+        :param income: income forms part of the budget constraint
+        :param cost_of_plan: cost of plan
+        :return:
+        """
         return income - P * Q - S - cost_of_plan
 
     def max_Q_and_S(self, utility_expr, budget, emissions):
@@ -81,12 +89,11 @@ class Agent:
         :param emissions:
         :return:
         """
-        L = utility_expr.subs(e_rate, emissions) - lam * (budget)
+        L = utility_expr.subs(e_rate, emissions) - lam * (budget)  # L for the Lagrangian
         dQ = diff(L, Q)  # FOC 1
-
         dS = diff(L, S)  # FOC 2
 
-        lam_sub = solve(dS, lam)[0]  # get lamda to substitute into dQ and remove lamda from eq
+        lam_sub = solve(dS, lam)[0]  # Get lamda to substitute into dQ and remove lamda from eq
 
         eq_to_solve = dQ.subs(lam, lam_sub)
 
@@ -107,7 +114,17 @@ class Agent:
         return Q_sol, S_sol
 
     def compare_plans(self, period, cG, cN, eG, eN):
-        # eval utility for green delivery
+        """
+        The agent evaluates and compares their expected utility for choosing green or normal utility.
+
+        :param period:
+        :param cG:
+        :param cN:
+        :param eG:
+        :param eN:
+        :return: the utility agent receives from which delivery plan they choose
+        """
+        # Eval utility for green delivery
         green_budget = self.get_budget_expression(self.Budget, cG)
         print(f"Maximising green for agent {self.Id} in period {period}")
         Q_sol_g, S_sol_g = self.max_Q_and_S(self.UtilityExpr, green_budget, eG)
@@ -115,7 +132,7 @@ class Agent:
         util_green = self.UtilityExpr.subs(
             [(e_rate, eG), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol_g), (Q, Q_sol_g)])
 
-        # eval utility for normal delivery
+        # Eval utility for normal delivery
         normal_budget = self.get_budget_expression(self.Budget, cN)
         print(f"Maximising normal for agent {self.Id} in period {period}")
         Q_sol_n, S_sol_n = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN)
@@ -125,7 +142,7 @@ class Agent:
             [(e_rate, eN), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol_n), (Q, Q_sol_n)])
 
         # compare utilities
-        green_is_better = util_green > util_normal and util_green != util_normal
+        green_is_better = util_green > util_normal  # and util_green != util_normal  # I think this second operation is redundant
 
         if green_is_better:
             self.CurrentPlan = 'Green'
