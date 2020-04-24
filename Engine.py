@@ -67,7 +67,7 @@ class Engine:
 
     def RunNormal(self, num_iterations):
         for i in range(num_iterations):
-            for agent in self.Agents:
+            for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
 
