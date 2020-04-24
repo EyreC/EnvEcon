@@ -1,14 +1,17 @@
-import math as ma
-import sympy as sp
-from sympy import *
-#init_printing()
-import random as rand
 from Agent import *
 from EnvSymbols import *
 
+import math as ma
+import random as rand
+import sympy as sp
+from sympy import *
+#init_printing()
+
+
+
 class Engine:
-    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval,
-                 cG, cN, eG, eN, omega_interval=[0, 0], delta_interval=[0, 0], friend_interval=[0, 0]):
+    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN,
+                 omega_interval=[0, 0], delta_interval=[0, 0], friend_interval=[0, 0]):
 
         ##document variables
         self.Agents = []

@@ -1,12 +1,22 @@
-import math as ma
-import sympy as sp
-from sympy import *
-#init_printing()
-import random as rand
 from EnvSymbols import *
 
+
 class Agent:
+
     def __init__(self, _id, a, b, mu, Y, p, omega=0, delta=0, friends=[]):
+        """
+        Initialises an Agent object with the following attributes:
+
+        :param _id: unique identifier
+        :param a: preference for consumption (coefficient of ln[Q])
+        :param b: preference for savings (coefficient of ln[S])
+        :param mu: eco-consicousness
+        :param Y: income
+        :param p: price of green delivery
+        :param omega:
+        :param delta:
+        :param friends: a list of agent ids who the Agent values the opinion of
+        """
         self.Id = _id
 
         # Expression variables
@@ -17,8 +27,8 @@ class Agent:
         self.Price = p
         self.EcoCon = mu
 
-        # current period props
-        self.CurrentPlan = 'Normal'
+        # Current period props
+        self.CurrentPlan = 'Normal'  # plan defaults to normal delivery
         self.CurrentUtility = 0
         self.UtilityDisparity = 0
 
@@ -33,15 +43,44 @@ class Agent:
         self.PlanRecords = {}
 
     def EnterRound(self, period, cG, cN, eG, eN):
+        """
+        At each period (round), the agent makes a decision between green and normal delivery using compare_plans().
+        EnterRound() does not consider if an agent has any friends (use EnterSocialRound()).
+
+        :param period: the iteration/ period that the Engine is in
+        :param cG: consumption of green delivery
+        :param cN: consumption of normal delivery
+        :param eG: emissions of green delivery
+        :param eN: emissions of normal delivery
+        """
         self.CurrentUtility = self.compare_plans(period, cG, cN, eG, eN)
 
     def EnterSocialRound(self, period, cG, cN, eG, eN, friends):
+        """
+        At each period (round),
+
+        :param period:
+        :param cG:
+        :param cN:
+        :param eG:
+        :param eN:
+        :param friends:
+        :return:
+        """
         self.CurrentUtility = self.compare_plans_social(period, cG, cN, eG, eN, friends)
 
     def get_budget_expression(self, income, cost_of_plan):
         return income - P * Q - S - cost_of_plan
 
     def max_Q_and_S(self, utility_expr, budget, emissions):
+        """
+        Solve the optimisation problem that maximises Quantity consumed
+
+        :param utility_expr:
+        :param budget:
+        :param emissions:
+        :return:
+        """
         L = utility_expr.subs(e_rate, emissions) - lam * (budget)
         dQ = diff(L, Q)  # FOC 1
 
@@ -53,10 +92,10 @@ class Agent:
 
         Q_in_terms_of_S = solve(eq_to_solve, Q)[0]
 
-        # solve with budget constraint to get S
+        # Solve with budget constraint to get S
         budget_in_terms_of_S = budget.subs(Q, Q_in_terms_of_S)
 
-        # subs P,mu,a,b
+        # Subs P,mu,a,b
         numeric_budget_in_terms_of_S = budget_in_terms_of_S.subs(
             [(a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon)])
 
@@ -71,19 +110,19 @@ class Agent:
         # eval utility for green delivery
         green_budget = self.get_budget_expression(self.Budget, cG)
         print(f"Maximising green for agent {self.Id} in period {period}")
-        Q_sol, S_sol = self.max_Q_and_S(self.UtilityExpr, green_budget, eG)
+        Q_sol_g, S_sol_g = self.max_Q_and_S(self.UtilityExpr, green_budget, eG)
 
         util_green = self.UtilityExpr.subs(
-            [(e_rate, eG), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol), (Q, Q_sol)])
+            [(e_rate, eG), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol_g), (Q, Q_sol_g)])
 
         # eval utility for normal delivery
         normal_budget = self.get_budget_expression(self.Budget, cN)
         print(f"Maximising normal for agent {self.Id} in period {period}")
-        Q_sol, S_sol = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN)
-        #comment
+        Q_sol_n, S_sol_n = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN)
+        # comment
 
         util_normal = self.UtilityExpr.subs(
-            [(e_rate, eN), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol), (Q, Q_sol)])
+            [(e_rate, eN), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol_n), (Q, Q_sol_n)])
 
         # compare utilities
         green_is_better = util_green > util_normal and util_green != util_normal
@@ -91,15 +130,15 @@ class Agent:
         if green_is_better:
             self.CurrentPlan = 'Green'
             self.UtilityDisparity = util_green - util_normal
-            self.Qrecords[period] = Q_sol #todo update to green Q_sol and green S_sol
-            self.Srecords[period] = S_sol
+            self.Qrecords[period] = Q_sol_g
+            self.Srecords[period] = S_sol_g
             self.PlanRecords[period] = 'Green'
             return util_green
         else:
             self.CurrentPlan = 'Normal'
             self.UtilityDisparity = util_normal - util_green
-            self.Qrecords[period] = Q_sol
-            self.Srecords[period] = S_sol
+            self.Qrecords[period] = Q_sol_n
+            self.Srecords[period] = S_sol_n
             self.PlanRecords[period] = 'Normal'
             return util_normal
 
@@ -114,19 +153,19 @@ class Agent:
         # eval green utility
         green_budget = self.get_budget_expression(self.Budget, cG)
 
-        Q_sol, S_sol = self.max_Q_and_S(social_utility_expr, green_budget, eG)
+        Q_sol_g, S_sol_g = self.max_Q_and_S(social_utility_expr, green_budget, eG)
 
         util_green = social_utility_expr.subs(
             [(e_rate, eG), (om, self.Omega), (delta, self.Delta), (a, self.A), (b, self.B), (P, self.Price),
-             (mu, self.EcoCon), (S, S_sol), (Q, Q_sol)])
+             (mu, self.EcoCon), (S, S_sol_g), (Q, Q_sol_g)])
 
         # eval normal utility
         normal_budget = self.get_budget_expression(self.Budget, cN)
-        Q_sol, S_sol = self.max_Q_and_S(social_utility_expr, normal_budget, eN)
+        Q_sol_n, S_sol_n = self.max_Q_and_S(social_utility_expr, normal_budget, eN)
 
         util_normal = social_utility_expr.subs(
             [(e_rate, eN), (om, self.Omega), (delta, self.Delta), (a, self.A), (b, self.B), (P, self.Price),
-             (mu, self.EcoCon), (S, S_sol), (Q, Q_sol)])
+             (mu, self.EcoCon), (S, S_sol_n), (Q, Q_sol_n)])
 
         # compare utilities
         green_is_better = util_green > util_normal and util_green != util_normal
