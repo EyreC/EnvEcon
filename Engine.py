@@ -1,5 +1,6 @@
 from Agent import *  # also imports EnvSymbols, and imports within EnvSymbols
 
+from pathos.multiprocessing import ProcessingPool as Pool
 import random as rand
 from tqdm import tqdm
 
@@ -37,20 +38,23 @@ class Engine:
 
         self.GenerateAgents(num_agents)
 
-        self.cG = cG
-        self.cN = cN
-        self.eG = eG
-        self.eN = eN
+        self.cG = nsimplify(cG)
+        self.cN = nsimplify(cN)
+        self.eG = nsimplify(eG)
+        self.eN = nsimplify(eN)
 
     def GenerateAgents(self, num_agents):
+        ## the nsimplify method converts floats into rational numbers
+        ## e.g. 0.3 -> 3/10
+        # this helps sympy solvers run more quickly
         for i in range(num_agents):
             # _id, a, b, mu, Y, p, friends = []):
-            a = rand.uniform(self.A_int[0], self.A_int[1])
-            b = 1. - a
-            mu = rand.uniform(self.Mu_int[0], self.Mu_int[1])
-            income = rand.uniform(self.Income_int[0], self.Income_int[1])
-            omega = rand.uniform(self.Omega_int[0], self.Omega_int[1])
-            delta = rand.uniform(self.Delta_int[0], self.Delta_int[1])
+            a = nsimplify(rand.uniform(self.A_int[0], self.A_int[1]))
+            b = 1 - a
+            mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
+            income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
+            omega = nsimplify(rand.uniform(self.Omega_int[0], self.Omega_int[1]))
+            delta = nsimplify(rand.uniform(self.Delta_int[0], self.Delta_int[1]))
 
             agent = Agent(i, a, b, mu, income, self.Price, omega, delta)
             ## todo Justin, random sample
@@ -60,16 +64,22 @@ class Engine:
 
             friends = list(set([rand.choice(range(num_agents)) for x in
                                 range(rand.choice(range(self.Friend_int[0], self.Friend_int[1])))]))
-            print(friends)
+
 
             agent.Friends = friends
             self.Agents.append(agent)
 
     def RunNormal(self, num_iterations):
+
         for i in range(num_iterations):
             for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+    def RunNormalMultiProc(self, num_iterations):
+        for i in tqdm(range(num_iterations)):
+            with Pool(3) as p:
+                agents = p.map(self.MultiProcAgentsNormal, [(i, agent) for agent in self.Agents])
+                self.Agents = agents
 
     def RunSocial(self, num_iterations):
         for i in range(num_iterations):
@@ -89,9 +99,22 @@ class Engine:
         # reset
         return
 
+    def MultiProcAgentsNormal(self, period_agent):
+        period = period_agent[0]
+        agent = period_agent[1]
+        agent.EnterRound(period, self.cG, self.cN, self.eG, self.eN)
+        return agent
+
     def PrintDeliveryShare(self):
         greens = 0
         for agent in self.Agents:
             if agent.CurrentPlan == "Green":
                 greens += 1
         return f"Green Delivery: {greens}, Normal Delivery: {len(self.Agents) - greens}"
+
+
+if __name__ == '__main__':
+    print('Initialising engine')
+    engine = Engine(30, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
+    print('Starting normal rounds')
+    engine.RunNormal(1)

@@ -93,11 +93,11 @@ class Agent:
         dQ = diff(L, Q)  # FOC 1
         dS = diff(L, S)  # FOC 2
 
-        lam_sub = solve(dS, lam)[0]  # Get lamda to substitute into dQ and remove lamda from eq
+        lam_sub = solve(dS, lam, simplify=False)[0]  # Get lamda to substitute into dQ and remove lamda from eq
 
         eq_to_solve = dQ.subs(lam, lam_sub)
 
-        Q_in_terms_of_S = solve(eq_to_solve, Q)[0]
+        Q_in_terms_of_S = solve(eq_to_solve, Q, simplify=False)[0]
 
         # Solve with budget constraint to get S
         budget_in_terms_of_S = budget.subs(Q, Q_in_terms_of_S)
@@ -107,7 +107,7 @@ class Agent:
             [(a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon)])
 
         # solve S
-        S_sol = solve(numeric_budget_in_terms_of_S, S)[0]
+        S_sol = solve(numeric_budget_in_terms_of_S, S, simplify=False)[0]
 
         Q_sol = Q_in_terms_of_S.subs([(a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol)])
 
