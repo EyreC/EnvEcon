@@ -214,3 +214,9 @@ class Agent:
             self.CurrentPlan = 'Normal'
             self.UtilityDisparity = util_normal - util_green
             return util_normal
+
+    def UpdateBudget(self,period):
+        # subtract pay outs P*Q
+        self.Budget -= self.Price * self.Qrecords[period]
+        # add savings
+        self.Budget += self.Srecords[period]

@@ -91,6 +91,15 @@ class Engine:
                 #  cG, cN, eG, eN
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
         self.ReportStatsAllStats(self.Agents, num_iterations)
+
+    def RunNormalWithIncomeScaling(self, num_iterations):
+        for i in range(num_iterations):
+            for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
+                #  cG, cN, eG, eN
+                agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+                agent.UpdateBudget(i)
+        self.ReportStatsAllStats(self.Agents, num_iterations)
+
     def RunNormalMultiProc(self, num_iterations):
         for i in tqdm(range(num_iterations)):
             with Pool(3) as p:
@@ -139,6 +148,6 @@ if __name__ == '__main__':
     print('Initialising engine')
     engine = Engine(10, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
     print('Starting normal rounds')
-    engine.RunNormal(7)
+    engine.RunNormalWithIncomeScaling(7)
 
 
