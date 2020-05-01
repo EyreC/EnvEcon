@@ -1,8 +1,12 @@
 from Agent import *  # also imports EnvSymbols, and imports within EnvSymbols
+from ErrorLogger import *
+from AggregationManager import *
 
 from pathos.multiprocessing import ProcessingPool as Pool
 import random as rand
 from tqdm import tqdm
+import datetime as dt
+
 
 class Engine:
 
@@ -26,6 +30,10 @@ class Engine:
         :param friend_interval: Min/ max bounds of number of friends,
         """
 
+        # Managers
+        self.ErrorLogger = ErrorLogger(dt.datetime.now())
+        self.AggregationManager = AggregationManager(eG, eN)
+
         ##document variables
         self.Agents = []
         self.Price = price
@@ -37,11 +45,13 @@ class Engine:
         self.Delta_int = delta_interval
 
         self.GenerateAgents(num_agents)
+        # print status of agents
 
         self.cG = nsimplify(cG)
         self.cN = nsimplify(cN)
         self.eG = nsimplify(eG)
         self.eN = nsimplify(eN)
+
 
     def GenerateAgents(self, num_agents):
         ## the nsimplify method converts floats into rational numbers
@@ -67,7 +77,12 @@ class Engine:
 
 
             agent.Friends = friends
+
+            agent.ErrorLogger = self.ErrorLogger #add the error logger
+
             self.Agents.append(agent)
+
+
 
     def RunNormal(self, num_iterations):
 
@@ -75,6 +90,7 @@ class Engine:
             for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+        self.ReportStatsAllStats(self.Agents, num_iterations)
     def RunNormalMultiProc(self, num_iterations):
         for i in tqdm(range(num_iterations)):
             with Pool(3) as p:
@@ -112,9 +128,17 @@ class Engine:
                 greens += 1
         return f"Green Delivery: {greens}, Normal Delivery: {len(self.Agents) - greens}"
 
+    def ReportStatsForPeriod(self, period):
+        self.AggregationManager.ReportStatsForPeriod(self.Agents, period)
+
+    def ReportStatsAllStats(self,agents, periods):
+        self.AggregationManager.ReportAllStats(agents, periods)
+
 
 if __name__ == '__main__':
     print('Initialising engine')
-    engine = Engine(30, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
+    engine = Engine(10, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
     print('Starting normal rounds')
-    engine.RunNormal(1)
+    engine.RunNormal(7)
+
+

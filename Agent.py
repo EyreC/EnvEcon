@@ -23,7 +23,7 @@ class Agent:
         self.Budget = Y
         self.A = a
         self.B = b
-        self.UtilityExpr = a * ln(Q) + b * ln(S) - ln(mu * e_rate * Q + 1)
+        self.UtilityExpr = a * ln(Q) + b * ln(S) - a*ln(mu * e_rate * Q + 1)
         self.Price = p
         self.EcoCon = mu
 
@@ -41,6 +41,9 @@ class Agent:
         self.Qrecords = {}
         self.Srecords = {}
         self.PlanRecords = {}
+
+        # ErrorLogger
+        self.ErrorLogger = None
 
     def EnterRound(self, period, cG, cN, eG, eN):
         """
@@ -80,7 +83,7 @@ class Agent:
         """
         return income - P * Q - S - cost_of_plan
 
-    def max_Q_and_S(self, utility_expr, budget, emissions):
+    def max_Q_and_S(self, utility_expr, budget, emissions, period):
         """
         Solve the optimisation problem that maximises Quantity consumed
 
@@ -97,7 +100,11 @@ class Agent:
 
         eq_to_solve = dQ.subs(lam, lam_sub)
 
-        Q_in_terms_of_S = solve(eq_to_solve, Q, simplify=False)[0]
+        Q_in_terms_of_S = solve(eq_to_solve, Q, simplify=False)
+
+        if not self.ErrorLogger.CheckSolutionExists(Q_in_terms_of_S, period, self.Id):
+            return (-1,-1)
+        Q_in_terms_of_S = Q_in_terms_of_S[0]
 
         # Solve with budget constraint to get S
         budget_in_terms_of_S = budget.subs(Q, Q_in_terms_of_S)
@@ -107,9 +114,16 @@ class Agent:
             [(a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon)])
 
         # solve S
-        S_sol = solve(numeric_budget_in_terms_of_S, S, simplify=False)[0]
+        #S_sol = solve(numeric_budget_in_terms_of_S, S, simplify=False)
+        #if not self.ErrorLogger.CheckSolutionExists(S_sol, period, self.Id):
+         #   return (-1,-1)
+        #S_sol = S_sol[0]
+        S_sol = nsolve(numeric_budget_in_terms_of_S, 1)
+        print(S_sol)
+
 
         Q_sol = Q_in_terms_of_S.subs([(a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol)])
+
 
         return Q_sol, S_sol
 
@@ -127,7 +141,9 @@ class Agent:
         # Eval utility for green delivery
         green_budget = self.get_budget_expression(self.Budget, cG)
         print(f"Maximising green for agent {self.Id} in period {period}")
-        Q_sol_g, S_sol_g = self.max_Q_and_S(self.UtilityExpr, green_budget, eG)
+        Q_sol_g, S_sol_g = self.max_Q_and_S(self.UtilityExpr, green_budget, eG, period)
+        if Q_sol_g == -1 and S_sol_g == -1:
+            return self.CurrentUtility
 
         util_green = self.UtilityExpr.subs(
             [(e_rate, eG), (a, self.A), (b, self.B), (P, self.Price), (mu, self.EcoCon), (S, S_sol_g), (Q, Q_sol_g)])
@@ -135,7 +151,10 @@ class Agent:
         # Eval utility for normal delivery
         normal_budget = self.get_budget_expression(self.Budget, cN)
         print(f"Maximising normal for agent {self.Id} in period {period}")
-        Q_sol_n, S_sol_n = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN)
+        Q_sol_n, S_sol_n = self.max_Q_and_S(self.UtilityExpr, normal_budget, eN, period)
+        if Q_sol_n == -1 and S_sol_n == -1:
+            return self.CurrentUtility
+
         # comment
 
         util_normal = self.UtilityExpr.subs(
@@ -170,7 +189,7 @@ class Agent:
         # eval green utility
         green_budget = self.get_budget_expression(self.Budget, cG)
 
-        Q_sol_g, S_sol_g = self.max_Q_and_S(social_utility_expr, green_budget, eG)
+        Q_sol_g, S_sol_g = self.max_Q_and_S(social_utility_expr, green_budget, eG, period)
 
         util_green = social_utility_expr.subs(
             [(e_rate, eG), (om, self.Omega), (delta, self.Delta), (a, self.A), (b, self.B), (P, self.Price),
@@ -178,7 +197,7 @@ class Agent:
 
         # eval normal utility
         normal_budget = self.get_budget_expression(self.Budget, cN)
-        Q_sol_n, S_sol_n = self.max_Q_and_S(social_utility_expr, normal_budget, eN)
+        Q_sol_n, S_sol_n = self.max_Q_and_S(social_utility_expr, normal_budget, eN, period)
 
         util_normal = social_utility_expr.subs(
             [(e_rate, eN), (om, self.Omega), (delta, self.Delta), (a, self.A), (b, self.B), (P, self.Price),
