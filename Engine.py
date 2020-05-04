@@ -4,6 +4,7 @@ from AggregationManager import *
 
 from pathos.multiprocessing import ProcessingPool as Pool
 import random as rand
+from scipy.stats import beta, lognorm
 from tqdm import tqdm
 import datetime as dt
 
@@ -12,6 +13,9 @@ class Engine:
 
     def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN,
                  omega_interval=[0, 0], delta_interval=[0, 0], friend_interval=[0, 0]):
+
+
+
         """
         The Engine class represents the social system, composed of agents making decisions between e-commerce delivery
         options. The Engine has
@@ -37,6 +41,7 @@ class Engine:
         ##document variables
         self.Agents = []
         self.Price = price
+        # self.A_shape_params = (a, b)
         self.A_int = a_interval
         self.Mu_int = mu_interval
         self.Income_int = income_interval
@@ -59,6 +64,8 @@ class Engine:
         # this helps sympy solvers run more quickly
         for i in range(num_agents):
             # _id, a, b, mu, Y, p, friends = []):
+
+            # a = beta.rvs(self.A_params[0], self.A_params[1])
             a = nsimplify(rand.uniform(self.A_int[0], self.A_int[1]))
             b = 1 - a
             mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
@@ -144,10 +151,15 @@ class Engine:
         self.AggregationManager.ReportAllStats(agents, periods)
 
 
-if __name__ == '__main__':
-    print('Initialising engine')
-    engine = Engine(10, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
-    print('Starting normal rounds')
-    engine.RunNormalWithIncomeScaling(7)
+# if __name__ == '__main__':
+#     mode, k = 0.75, 500  # mode and concentration
+#
+#     beta_distribution_a = (mode * (k-2)) + 1
+#     beta_distribution_b = ((1-mode) * (k-2)) + 1
+#
+#     print('Initialising engine')
+#     engine = Engine(10, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
+#     print('Starting normal rounds')
+#     engine.RunNormalWithIncomeScaling(7)
 
 
