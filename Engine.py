@@ -1,8 +1,8 @@
 from Agent import *  # also imports EnvSymbols, and imports within EnvSymbols
+from UtilityHandler import *
 from ErrorLogger import *
 from AggregationManager import *
 
-from pathos.multiprocessing import ProcessingPool as Pool
 import random as rand
 from scipy.stats import beta, lognorm
 from tqdm import tqdm
@@ -12,7 +12,7 @@ import datetime as dt
 class Engine:
 
     def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN,
-                 omega_interval=[0, 0], delta_interval=[0, 0], friend_interval=[0, 0]):
+                 delta_interval=[0, 0], friend_interval=[0, 0]):
 
 
 
@@ -46,7 +46,6 @@ class Engine:
         self.Mu_int = mu_interval
         self.Income_int = income_interval
         self.Friend_int = friend_interval
-        self.Omega_int = omega_interval
         self.Delta_int = delta_interval
 
         self.GenerateAgents(num_agents)
@@ -57,6 +56,7 @@ class Engine:
         self.eG = nsimplify(eG)
         self.eN = nsimplify(eN)
 
+        self.UtilityHandler = UtilityHandler()
 
     def GenerateAgents(self, num_agents):
         ## the nsimplify method converts floats into rational numbers
@@ -70,16 +70,15 @@ class Engine:
             b = 1 - a
             mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
             income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
-            omega = nsimplify(rand.uniform(self.Omega_int[0], self.Omega_int[1]))
             delta = nsimplify(rand.uniform(self.Delta_int[0], self.Delta_int[1]))
 
-            agent = Agent(i, a, b, mu, income, self.Price, omega, delta)
+            agent = Agent(i, a, b, mu, income, self.Price, delta)
             ## todo Justin, random sample
             # This should be able to do the same job as list set
-            friends2 = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
+            friends = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
                                    rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
 
-            friends = list(set([rand.choice(range(num_agents)) for x in
+            friends2 = list(set([rand.choice(range(num_agents)) for x in
                                 range(rand.choice(range(self.Friend_int[0], self.Friend_int[1])))]))
 
 
@@ -92,11 +91,12 @@ class Engine:
 
 
     def RunNormal(self, num_iterations):
-
+        self.UtilityHandler.SolveNormal()
         for i in range(num_iterations):
             for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
-                agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+                #agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+                agent.EnterGenericRound(i,self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
 
     def RunNormalWithIncomeScaling(self, num_iterations):
@@ -107,22 +107,21 @@ class Engine:
                 agent.UpdateBudget(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
 
-    def RunNormalMultiProc(self, num_iterations):
-        for i in tqdm(range(num_iterations)):
-            with Pool(3) as p:
-                agents = p.map(self.MultiProcAgentsNormal, [(i, agent) for agent in self.Agents])
-                self.Agents = agents
-
     def RunSocial(self, num_iterations):
-        for i in range(num_iterations):
-            if i == 0:
-                for agent in self.Agents:
-                    agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
-            else:
+        self.UtilityHandler.SolveNormal()
+        if num_iterations > 1:
+            for agent in self.Agents:
+                agent.EnterGenericRound(0, self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
+            self.UtilityHandler.SolveSocial()
+            for i in range (num_iterations - 1):
+                print(f"Starting Social Round {i+1}")
                 for agent in self.Agents:
                     # find this agent's friends
-                    friends = (x for x in self.Agents if x.Id in agent.Friends)
-                    agent.EnterSocialRound(i, self.cG, self.cN, self.eG, self.eN, friends)
+                    friends = [x for x in self.Agents if x.Id in agent.Friends]
+                    agent.EnterSocialRound(i + 1, self.cG, self.cN, self.eG, self.eN, friends, self.UtilityHandler)
+        self.ReportStatsAllStats(self.Agents, num_iterations)
+
+
 
     def RunRebound(self, num_iterations):
         return
@@ -131,11 +130,8 @@ class Engine:
         # reset
         return
 
-    def MultiProcAgentsNormal(self, period_agent):
-        period = period_agent[0]
-        agent = period_agent[1]
-        agent.EnterRound(period, self.cG, self.cN, self.eG, self.eN)
-        return agent
+    def SolveUtilityFunction(self):
+        return
 
     def PrintDeliveryShare(self):
         greens = 0
@@ -149,6 +145,8 @@ class Engine:
 
     def ReportStatsAllStats(self,agents, periods):
         self.AggregationManager.ReportAllStats(agents, periods)
+
+
 
 
 # if __name__ == '__main__':

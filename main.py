@@ -8,9 +8,9 @@ def main():
 
 
     print('Initialising engine')
-    engine = Engine(10, 3, [0.3, 0.7], [0.3, 0.6], [300, 500], 100, 20, 0.01, 0.03, [0.3, 0.8], [0.3, 0.8], [1, 2])
+    engine = Engine(10, 3, [0.3, 0.7], [0.3, 0.6], [300, 500], 30, 20, 0.95, 1, [0.00003, 0.00005], [1, 2])
     print('Starting normal rounds')
-    # engine.RunNormalWithIncomeScaling(7)
+    engine.RunSocial(2)
 
 if __name__ == '__main__':
     main()

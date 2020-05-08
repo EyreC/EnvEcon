@@ -3,7 +3,7 @@ from EnvSymbols import *  # Also imports math and sympy
 
 class Agent:
 
-    def __init__(self, _id, a, b, mu, Y, p, omega=0, delta=0, friends=[]):
+    def __init__(self, _id, a, b, mu, Y, p, delta=0, friends=[]):
         """
         Initialises an Agent object with the following attributes:
 
@@ -34,8 +34,8 @@ class Agent:
 
         # Friendship
         self.Friends = []
-        self.Omega = omega
         self.Delta = delta
+        self.Friend_Effect = None
 
         # History
         self.Qrecords = {}
@@ -44,6 +44,118 @@ class Agent:
 
         # ErrorLogger
         self.ErrorLogger = None
+
+    def EnterGenericRound(self, period, cG, cN, eG, eN, utility_handler):
+        self.CurrentUtility = self.compare_generic(period, cG, cN, eG, eN, utility_handler)
+
+    def compare_generic(self, period, cG, cN, eG, eN, utility_handler):
+        # Eval utility for green delivery
+        util_generic = utility_handler.Generic_Utility_Function.subs(
+            [(S, utility_handler.Generic_Solved_S), (Q, utility_handler.Generic_Solved_Q)]      # Q,S subs (Q,S)
+        )
+
+        util_green, util_normal = self.evaluate_green_normal(util_generic, cG, cN, eG, eN)
+
+        # compare utilities
+        green_is_better = util_green > util_normal  # and util_green != util_normal  # I think this second operation is redundant
+
+        if green_is_better:
+            self.assign_green(util_green, util_normal, period, utility_handler, eG, cG)
+            return util_green
+
+        else:
+            self.assign_normal(util_green, util_normal, period, utility_handler, eN, cN)
+            return util_normal
+
+    def assign_green(self, util_green, util_normal, period, utility_handler, eG, cG):
+        self.CurrentPlan = 'Green'
+        self.UtilityDisparity = util_green - util_normal
+        self.PlanRecords[period] = 'Green'
+        self.Qrecords[period] = utility_handler.Generic_Solved_Q.subs([(e_rate, eG),  # emissions subs (e_rate)
+                                                                       (a, self.A), (b, self.B), (mu, self.EcoCon),
+                                                                       # agent params subs (a,b,mu)
+                                                                       (Y, self.Budget), (P, self.Price),
+                                                                       (cGeneric, cG)]).evalf()  # budget subs (Y, P, cGeneric
+
+        self.Srecords[period] = utility_handler.Generic_Solved_S.subs([(e_rate, eG),  # emissions subs (e_rate)
+                                                                       (a, self.A), (b, self.B), (mu, self.EcoCon),
+                                                                       # agent params subs (a,b,mu)
+                                                                       (Y, self.Budget), (P, self.Price),
+                                                                       (cGeneric, cG)]).evalf()  # budget subs (Y, P, cGeneric
+
+    def assign_normal(self, util_green, util_normal, period, utility_handler,eN,cN):
+        self.CurrentPlan = 'Normal'
+        self.UtilityDisparity = util_normal - util_green
+        self.PlanRecords[period] = 'Normal'
+        self.Qrecords[period] = utility_handler.Generic_Solved_Q.subs([(e_rate, eN),  # emissions subs (e_rate)
+                                                                       (a, self.A), (b, self.B), (mu, self.EcoCon),
+                                                                       # agent params subs (a,b,mu)
+                                                                       (Y, self.Budget), (P, self.Price),
+                                                                       (cGeneric, cN)]).evalf()  # budget subs (Y, P, cGeneric
+        self.Srecords[period] = utility_handler.Generic_Solved_S.subs([(e_rate, eN),  # emissions subs (e_rate)
+                                                                       (a, self.A), (b, self.B), (mu, self.EcoCon),
+                                                                       # agent params subs (a,b,mu)
+                                                                       (Y, self.Budget), (P, self.Price),
+                                                                       (cGeneric, cN)]).evalf()  # budget subs (Y, P, cGeneric
+
+    def assign_green_social(self, util_green, util_normal, period, utility_handler,eG,cG, friend_val):
+        self.assign_green(util_green, util_normal, period, utility_handler, eG, cG)
+        self.Qrecords[period] = self.Qrecords[period].subs([(delta, self.Delta),(F,friend_val)])
+        self.Srecords[period] = self.Srecords[period].subs([(delta, self.Delta),(F,friend_val)])
+
+    def assign_normal_social(self, util_green, util_normal, period, utility_handler, eN, cN, friend_val):
+        self.assign_normal(util_green, util_normal, period, utility_handler, eN, cN)
+        self.Qrecords[period] = self.Qrecords[period].subs([(delta, self.Delta),(F,friend_val)])
+        self.Srecords[period] = self.Srecords[period].subs([(delta, self.Delta),(F,friend_val)])
+
+
+    def evaluate_green_normal(self, util_generic, cG, cN, eG, eN):
+        util_green = util_generic.subs(
+            [(e_rate, eG),                                                                      # emissions subs (e_rate)
+             (a, self.A), (b, self.B), (mu, self.EcoCon),                                       # agent params subs (a,b,mu)
+             (Y,self.Budget), (P, self.Price), (cGeneric, cG)]).evalf()                             # budget subs (Y, P, cGeneric
+
+
+        util_normal = util_generic.subs(
+            [(e_rate, eN),                                                                      # emissions subs (e_rate)
+             (a, self.A), (b, self.B), (mu, self.EcoCon),                                       # agent params subs (a,b,mu)
+             (Y,self.Budget), (P, self.Price), (cGeneric, cN)]).evalf()                              # budget subs (Y, P, cGeneric)
+
+        return util_green,util_normal
+
+    def evaluate_green_normal_social(self, util_generic, cG, cN, eG, eN, friends, period):
+        generic_green, generic_normal = self.evaluate_green_normal(util_generic, cG, cN, eG, eN)
+        util_green = generic_green.subs([
+                                         (delta, self.Delta),
+                                         (F,sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Green'])/len(friends))
+                                        ]).evalf()
+        util_normal = generic_green.subs([
+                                        (delta, self.Delta),
+                                        (F, sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Normal'])/len(friends))
+                                        ]).evalf()
+        return util_green, util_normal
+
+    def compare_generic_social(self,  period, cG, cN, eG, eN, friends, utility_handler):
+        # Eval utility for green delivery
+        util_generic = utility_handler.Generic_Utility_Function.subs(
+            [(S, utility_handler.Generic_Solved_S), (Q, utility_handler.Generic_Solved_Q)]  # Q,S subs (Q,S)
+        )
+
+        util_green, util_normal = self.evaluate_green_normal_social(util_generic, cG, cN, eG, eN, friends, period)
+
+        # compare utilities
+        green_is_better = util_green > util_normal  # and util_green != util_normal  # I think this second operation is redundant
+
+        if green_is_better:
+            self.Friend_Effect = sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Green']) / len(friends)
+            self.assign_green_social(util_green, util_normal, period, utility_handler, eG, cG, self.Friend_Effect)
+            return util_green
+
+        else:
+            self.Friend_Effect = sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Normal']) / len(friends)
+            self.assign_normal_social(util_green, util_normal, period, utility_handler, eN, cN,self.Friend_Effect)
+            return util_normal
+
 
     def EnterRound(self, period, cG, cN, eG, eN):
         """
@@ -58,7 +170,7 @@ class Agent:
         """
         self.CurrentUtility = self.compare_plans(period, cG, cN, eG, eN)
 
-    def EnterSocialRound(self, period, cG, cN, eG, eN, friends):
+    def EnterSocialRound(self, period, cG, cN, eG, eN, friends, utility_handler):
         """
         At each period (round),
 
@@ -70,7 +182,7 @@ class Agent:
         :param friends:
         :return:
         """
-        self.CurrentUtility = self.compare_plans_social(period, cG, cN, eG, eN, friends)
+        self.CurrentUtility = self.compare_generic_social(period, cG, cN, eG, eN, friends, utility_handler)
 
     def get_budget_expression(self, income, cost_of_plan):
         """
@@ -217,6 +329,6 @@ class Agent:
 
     def UpdateBudget(self,period):
         # subtract pay outs P*Q
-        self.Budget -= self.Price * self.Qrecords[period]
+        #self.Budget -= self.Price * self.Qrecords[period]
         # add savings
         self.Budget += self.Srecords[period]
