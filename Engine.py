@@ -35,7 +35,6 @@ class Engine:
         """
 
         # Managers
-        self.ErrorLogger = ErrorLogger(dt.datetime.now())
         self.AggregationManager = AggregationManager(eG, eN)
 
         ##document variables
@@ -84,7 +83,6 @@ class Engine:
 
             agent.Friends = friends
 
-            agent.ErrorLogger = self.ErrorLogger #add the error logger
 
             self.Agents.append(agent)
 
@@ -121,17 +119,13 @@ class Engine:
                     agent.EnterSocialRound(i + 1, self.cG, self.cN, self.eG, self.eN, friends, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
 
+    def RunBenchMark(self, num_iterations):
+        self.UtilityHandler.SolveNormal()
+        for i in range(num_iterations):
+            for agent in self.Agents:
+                agent.EnterBenchMarkRound(i, self.cN, self.eN, self.UtilityHandler)
+        self.ReportStatsAllStats(self.Agents, num_iterations)
 
-
-    def RunRebound(self, num_iterations):
-        return
-
-    def ResetAgents(self):
-        # reset
-        return
-
-    def SolveUtilityFunction(self):
-        return
 
     def PrintDeliveryShare(self):
         greens = 0

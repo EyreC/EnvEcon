@@ -43,7 +43,7 @@ class Agent:
         self.PlanRecords = {}
 
         # ErrorLogger
-        self.ErrorLogger = None
+
 
     def EnterGenericRound(self, period, cG, cN, eG, eN, utility_handler):
         self.CurrentUtility = self.compare_generic(period, cG, cN, eG, eN, utility_handler)
@@ -67,9 +67,9 @@ class Agent:
             self.assign_normal(util_green, util_normal, period, utility_handler, eN, cN)
             return util_normal
 
-    def assign_green(self, util_green, util_normal, period, utility_handler, eG, cG):
+    def assign_green(self, period, utility_handler, eG, cG):
         self.CurrentPlan = 'Green'
-        self.UtilityDisparity = util_green - util_normal
+        #self.UtilityDisparity = util_green - util_normal
         self.PlanRecords[period] = 'Green'
         self.Qrecords[period] = utility_handler.Generic_Solved_Q.subs([(e_rate, eG),  # emissions subs (e_rate)
                                                                        (a, self.A), (b, self.B), (mu, self.EcoCon),
@@ -83,9 +83,9 @@ class Agent:
                                                                        (Y, self.Budget), (P, self.Price),
                                                                        (cGeneric, cG)]).evalf()  # budget subs (Y, P, cGeneric
 
-    def assign_normal(self, util_green, util_normal, period, utility_handler,eN,cN):
+    def assign_normal(self, period, utility_handler,eN,cN):
         self.CurrentPlan = 'Normal'
-        self.UtilityDisparity = util_normal - util_green
+        #self.UtilityDisparity = util_normal - util_green
         self.PlanRecords[period] = 'Normal'
         self.Qrecords[period] = utility_handler.Generic_Solved_Q.subs([(e_rate, eN),  # emissions subs (e_rate)
                                                                        (a, self.A), (b, self.B), (mu, self.EcoCon),
@@ -98,13 +98,13 @@ class Agent:
                                                                        (Y, self.Budget), (P, self.Price),
                                                                        (cGeneric, cN)]).evalf()  # budget subs (Y, P, cGeneric
 
-    def assign_green_social(self, util_green, util_normal, period, utility_handler,eG,cG, friend_val):
-        self.assign_green(util_green, util_normal, period, utility_handler, eG, cG)
+    def assign_green_social(self, period, utility_handler,eG,cG, friend_val):
+        self.assign_green(period, utility_handler, eG, cG)
         self.Qrecords[period] = self.Qrecords[period].subs([(delta, self.Delta),(F,friend_val)])
         self.Srecords[period] = self.Srecords[period].subs([(delta, self.Delta),(F,friend_val)])
 
-    def assign_normal_social(self, util_green, util_normal, period, utility_handler, eN, cN, friend_val):
-        self.assign_normal(util_green, util_normal, period, utility_handler, eN, cN)
+    def assign_normal_social(self, period, utility_handler, eN, cN, friend_val):
+        self.assign_normal( period, utility_handler, eN, cN)
         self.Qrecords[period] = self.Qrecords[period].subs([(delta, self.Delta),(F,friend_val)])
         self.Srecords[period] = self.Srecords[period].subs([(delta, self.Delta),(F,friend_val)])
 
@@ -129,7 +129,7 @@ class Agent:
                                          (delta, self.Delta),
                                          (F,sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Green'])/len(friends))
                                         ]).evalf()
-        util_normal = generic_green.subs([
+        util_normal = generic_normal.subs([
                                         (delta, self.Delta),
                                         (F, sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Normal'])/len(friends))
                                         ]).evalf()
@@ -148,12 +148,12 @@ class Agent:
 
         if green_is_better:
             self.Friend_Effect = sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Green']) / len(friends)
-            self.assign_green_social(util_green, util_normal, period, utility_handler, eG, cG, self.Friend_Effect)
+            self.assign_green_social(period, utility_handler, eG, cG, self.Friend_Effect)
             return util_green
 
         else:
             self.Friend_Effect = sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Normal']) / len(friends)
-            self.assign_normal_social(util_green, util_normal, period, utility_handler, eN, cN,self.Friend_Effect)
+            self.assign_normal_social(period, utility_handler, eN, cN,self.Friend_Effect)
             return util_normal
 
 
@@ -184,6 +184,28 @@ class Agent:
         """
         self.CurrentUtility = self.compare_generic_social(period, cG, cN, eG, eN, friends, utility_handler)
 
+    def EnterBenchMarkRound(self, period, cN, eN, utility_handler):
+        self.CurrentUtility = self.compare_normal_to_no_plan(period, cN, eN, utility_handler)
+
+    def compare_normal_to_no_plan(self, period, cN, eN, utility_handler):
+        util_generic = utility_handler.Generic_Utility_Function.subs(
+            [(S, utility_handler.Generic_Solved_S), (Q, utility_handler.Generic_Solved_Q)]  # Q,S subs (Q,S)
+        )
+        util_normal = util_generic.subs(
+            [(e_rate, eN),  # emissions subs (e_rate)
+             (a, self.A), (b, self.B), (mu, self.EcoCon),  # agent params subs (a,b,mu)
+             (Y, self.Budget), (P, self.Price), (cGeneric, cN)]).evalf()
+
+        if util_normal > 0:
+            self.assign_normal(period, utility_handler, eN, cN)
+        else:
+            self.CurrentPlan = 'None'
+            # self.UtilityDisparity = util_normal - util_green
+            self.PlanRecords[period] = 'None'
+            self.Qrecords[period] = 0
+            self.Srecords[period] = self.Budget
+
+
     def get_budget_expression(self, income, cost_of_plan):
         """
         The budget constraint is expressed in the form:
@@ -212,11 +234,7 @@ class Agent:
 
         eq_to_solve = dQ.subs(lam, lam_sub)
 
-        Q_in_terms_of_S = solve(eq_to_solve, Q, simplify=False)
-
-        if not self.ErrorLogger.CheckSolutionExists(Q_in_terms_of_S, period, self.Id):
-            return (-1,-1)
-        Q_in_terms_of_S = Q_in_terms_of_S[0]
+        Q_in_terms_of_S = solve(eq_to_solve, Q, simplify=False)[0]
 
         # Solve with budget constraint to get S
         budget_in_terms_of_S = budget.subs(Q, Q_in_terms_of_S)
