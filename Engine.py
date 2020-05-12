@@ -4,7 +4,8 @@ from ErrorLogger import *
 from AggregationManager import *
 
 import random as rand
-from scipy.stats import beta, lognorm
+import math
+from scipy.stats import beta, lognorm, norm
 from tqdm import tqdm
 import datetime as dt
 
@@ -64,11 +65,14 @@ class Engine:
         for i in range(num_agents):
             # _id, a, b, mu, Y, p, friends = []):
 
-            # a = beta.rvs(self.A_params[0], self.A_params[1])
+            # a = beta.rvs(self.A_params[0], self.A_params[1])  # replace with this line to draw from random beta distributino
             a = nsimplify(rand.uniform(self.A_int[0], self.A_int[1]))
             b = 1 - a
             mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
-            income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
+
+            # income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
+            income = np.exp(norm.rvs(self.Income_int[0], self.Income_int[1]))
+
             delta = nsimplify(rand.uniform(self.Delta_int[0], self.Delta_int[1]))
 
             agent = Agent(i, a, b, mu, income, self.Price, delta)
