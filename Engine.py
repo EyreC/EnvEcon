@@ -38,7 +38,7 @@ class Engine:
         self.AggregationManager = AggregationManager(eG, eN)
 
         ##document variables
-        self.Agents = []
+        self.Agents = [0 for i in range(num_agents)]
         self.Price = price
         # self.A_shape_params = (a, b)
         self.A_int = a_interval
@@ -50,10 +50,10 @@ class Engine:
         self.GenerateAgents(num_agents)
         # print status of agents
 
-        self.cG = nsimplify(cG)
-        self.cN = nsimplify(cN)
-        self.eG = nsimplify(eG)
-        self.eN = nsimplify(eN)
+        self.cG = cG
+        self.cN = cN
+        self.eG = eG
+        self.eN = eN
 
         self.UtilityHandler = UtilityHandler()
 
@@ -61,37 +61,39 @@ class Engine:
         ## the nsimplify method converts floats into rational numbers
         ## e.g. 0.3 -> 3/10
         # this helps sympy solvers run more quickly
+        friendList = [j for j in range(num_agents)]
         for i in range(num_agents):
+            print(f"Initialisaing Agent {i}")
             # _id, a, b, mu, Y, p, friends = []):
 
             # a = beta.rvs(self.A_params[0], self.A_params[1])
-            a = nsimplify(rand.uniform(self.A_int[0], self.A_int[1]))
+            a = rand.uniform(self.A_int[0], self.A_int[1])
             b = 1 - a
-            mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
-            income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
-            delta = nsimplify(rand.uniform(self.Delta_int[0], self.Delta_int[1]))
+            mu = rand.uniform(self.Mu_int[0], self.Mu_int[1])
+            income = rand.uniform(self.Income_int[0], self.Income_int[1])
+            delta = rand.uniform(self.Delta_int[0], self.Delta_int[1])
 
             agent = Agent(i, a, b, mu, income, self.Price, delta)
             ## todo Justin, random sample
             # This should be able to do the same job as list set
-            friends = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
+          #  agent.Friends = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
+           #                        rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
+            friendList.remove(i)
+            agent.Friends = rand.sample(friendList,  # Agents cannot be friends with themselves
                                    rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
 
-            friends2 = list(set([rand.choice(range(num_agents)) for x in
-                                range(rand.choice(range(self.Friend_int[0], self.Friend_int[1])))]))
+            friendList.append(i)
 
 
-            agent.Friends = friends
-
-
-            self.Agents.append(agent)
+            self.Agents[i] = agent
 
 
 
     def RunNormal(self, num_iterations):
         self.UtilityHandler.SolveNormal()
+
         for i in range(num_iterations):
-            for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
+            for agent in self.Agents:  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
                 #agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
                 agent.EnterGenericRound(i,self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
@@ -102,7 +104,7 @@ class Engine:
             for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
-                agent.UpdateBudget(i)
+                agent.UpdateBudget(i, 0.1)
         self.ReportStatsAllStats(self.Agents, num_iterations)
 
     def RunSocial(self, num_iterations):
@@ -122,8 +124,14 @@ class Engine:
     def RunBenchMark(self, num_iterations):
         self.UtilityHandler.SolveNormal()
         for i in range(num_iterations):
+            print(f"Entering round {i}")
+            count = 0
             for agent in self.Agents:
+                print(f"Engaging agent {count}")
                 agent.EnterBenchMarkRound(i, self.cN, self.eN, self.UtilityHandler)
+                agent.UpdateBudget(i, 0.1)
+                count += 1
+            self.AdjustForInflation(i, 2, 0.03)
         self.ReportStatsAllStats(self.Agents, num_iterations)
 
 
@@ -139,6 +147,14 @@ class Engine:
 
     def ReportStatsAllStats(self,agents, periods):
         self.AggregationManager.ReportAllStats(agents, periods)
+
+
+    def AdjustForInflation(self, period, inflation_cycle_length, inflation_rate):
+        if period % inflation_cycle_length == 0:
+            self.cG = self.cG * (1. + inflation_rate)
+            self.cN = self.cN * (1. + inflation_rate)
+
+
 
 
 
