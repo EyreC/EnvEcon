@@ -1,7 +1,9 @@
 from Engine import *
+import time
 from RandomNumbers import *
 
 def main():
+    mode, k = 0.75, 500  # mode and concentration
 
     # Shape parameters for beta distribution of alpha in utility function
     alpha_a, alpha_b = find_beta_shape_params(mean=0.8, stdev=0.05)
