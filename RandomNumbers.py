@@ -9,8 +9,8 @@ def find_beta_shape_params(mode=0, concentration=0, mean=0, stdev=0, variance=0)
         return a, b
 
     elif mode > 0 and concentration > 0:
-        a = (mode * (k - 2)) + 1
-        b = ((1 - mode) * (k - 2)) + 1
+        a = (mode * (concentration - 2)) + 1
+        b = ((1 - mode) * (concentration - 2)) + 1
         return a, b
 
     else:
