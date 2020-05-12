@@ -111,6 +111,7 @@ class Engine:
                     agent.EnterSocialRound(i + 1, self.cG, self.cN, self.eG, self.eN, friends, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'social')
+        self.SaveAgentSample(3, num_iterations, 'social')
 
     def RunBenchMark(self, num_iterations):
         self.UtilityHandler.SolveNormal()
@@ -137,7 +138,8 @@ class Engine:
     def SaveStats(self, agents, periods, type):
         self.AggregationManager.AddSimulationToCSV(agents, periods, type)
 
-
+    def SaveAgentSample(self, sample_size, periods, type):
+        self.AggregationManager.AddAgentSampleToCSV(self.Agents, sample_size, periods, type)
 
 
 # if __name__ == '__main__':

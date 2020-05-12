@@ -8,6 +8,44 @@ class AggregationManager:
         self.eG = eG
         self.eN = eN
 
+    def AddAgentSampleToCSV(self, agents, sample_size, total_periods, type):
+        if type == 'normal':
+            filepath = './normal_agent.csv'
+        elif type == 'social':
+            filepath = './social_agent.csv'
+        elif type == 'benchmark':
+            filepath = './benchmark_agent.csv'
+
+        # grab a sample of agents
+        sample_pool = rand.sample(agents, sample_size)
+        sample_pool = sorted(sample_pool, key=lambda x: x.Id, reverse=False)
+
+        cols = ['AgentId', 'Period', 'UtilityDisparity', 'Emissions', 'DeliveryPlan']
+        df = pd.DataFrame(columns = cols)
+
+        for i, agent in enumerate(sample_pool):
+            agent_df = pd.DataFrame(columns=cols)
+            ids = [i for x in range(total_periods)]
+            utility_disparity_items = sorted([kv for kv in agent.UtilityDisparity.items()], key=lambda x: x[0])
+            utility_disparity = [kv[1] for kv in utility_disparity_items]
+            periods = [i for i in range(total_periods)]
+            emissions_items = sorted([kv for kv in agent.Erecords.items()], key=lambda x: x[0])
+            emissions = [kv[1] for kv in emissions_items]
+            plan_items = sorted([kv for kv in agent.PlanRecords.items()], key=lambda x: x[0])
+            plan = [kv[1] for kv in plan_items]
+
+            agent_df['AgentId'] = ids
+            agent_df['Period'] = periods
+            agent_df['UtilityDisparity'] = utility_disparity
+            agent_df['Emissions'] = emissions
+            agent_df['DeliveryPlan'] = plan
+
+            df = pd.concat([df, agent_df], join='inner')
+
+        df.to_csv(filepath)
+
+
+
 
 
     def AddSimulationToCSV(self, agents, total_periods, type):

@@ -41,6 +41,8 @@ class Agent:
         self.Srecords = {}
         self.PlanRecords = {}
         self.UtilityDisparity = {}
+        self.Erecords = {}
+
 
         # ErrorLogger
 
@@ -78,6 +80,7 @@ class Agent:
         self.PlanRecords[period] = 'Green'
         self.Qrecords[period] = utility_handler.Lambdify_Q(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
         self.Srecords[period] = utility_handler.Lambdify_S(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
+        self.Erecords[period] = self.Qrecords[period] * eG
 
     @timer
     def assign_normal(self, period, utility_handler,eN,cN):
@@ -86,6 +89,7 @@ class Agent:
         self.PlanRecords[period] = 'Normal'
         self.Qrecords[period] = utility_handler.Lambdify_Q(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
         self.Srecords[period] = utility_handler.Lambdify_S(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
+        self.Erecords[period] = self.Qrecords[period] * eN
 
     def assign_utility_disparity(self, period, util_green, util_normal):
         """
@@ -97,6 +101,9 @@ class Agent:
         :return: None
         """
         self.UtilityDisparity[period] = util_green - util_normal
+
+    def assign_choice(self):
+        return
 
     @timer
     def EnterSocialRound(self, period, cG, cN, eG, eN, friends, utility_handler):
@@ -127,10 +134,12 @@ class Agent:
 
         if green_is_better:
             self.assign_green_social(period, utility_handler, eG, cG)
+            self.assign_utility_disparity(period, util_green, util_normal)
             return util_green
 
         else:
             self.assign_normal_social(period, utility_handler, eN, cN)
+            self.assign_utility_disparity(period, util_green, util_normal)
             return util_normal
 
     @timer
@@ -172,6 +181,7 @@ class Agent:
             self.PlanRecords[period] = 'None'
             self.Qrecords[period] = 0
             self.Srecords[period] = self.Budget
+
 
 
     def UpdateBudget(self,period, fraction_of_savings):
