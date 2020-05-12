@@ -39,9 +39,8 @@ class Engine:
         self.AggregationManager = AggregationManager(eG, eN)
 
         ##document variables
-        self.Agents = []
+        self.Agents = [0 for i in range(num_agents)]
         self.Price = price
-        # self.A_shape_params = (a, b)
         self.A_int = a_interval
         self.Mu_int = mu_interval
         self.Income_int = income_interval
@@ -49,46 +48,34 @@ class Engine:
         self.Delta_int = delta_interval
 
         self.GenerateAgents(num_agents)
-        # print status of agents
 
-        self.cG = nsimplify(cG)
-        self.cN = nsimplify(cN)
-        self.eG = nsimplify(eG)
-        self.eN = nsimplify(eN)
+        self.cG = cG
+        self.cN = cN
+        self.eG = eG
+        self.eN = eN
 
         self.UtilityHandler = UtilityHandler()
 
     def GenerateAgents(self, num_agents):
-        ## the nsimplify method converts floats into rational numbers
-        ## e.g. 0.3 -> 3/10
-        # this helps sympy solvers run more quickly
+        friendList = [j for j in range(num_agents)]
         for i in range(num_agents):
             # _id, a, b, mu, Y, p, friends = []):
 
-            # a = beta.rvs(self.A_params[0], self.A_params[1])  # replace with this line to draw from random beta distributino
-            a = nsimplify(rand.uniform(self.A_int[0], self.A_int[1]))
+            a = beta.rvs(self.A_int[0], self.A_int[1])  # replace with this line to draw from random beta distributino
             b = 1 - a
-            mu = nsimplify(rand.uniform(self.Mu_int[0], self.Mu_int[1]))
-
-            # income = nsimplify(rand.uniform(self.Income_int[0], self.Income_int[1]))
+            mu = rand.uniform(self.Mu_int[0], self.Mu_int[1])
             income = np.exp(norm.rvs(self.Income_int[0], self.Income_int[1]))
-
-            delta = nsimplify(rand.uniform(self.Delta_int[0], self.Delta_int[1]))
+            delta = rand.uniform(self.Delta_int[0], self.Delta_int[1])
 
             agent = Agent(i, a, b, mu, income, self.Price, delta)
-            ## todo Justin, random sample
-            # This should be able to do the same job as list set
-            friends = rand.sample([j for j in range(num_agents) if j!=i],  # Agents cannot be friends with themselves
+
+            # assign friends
+            friendList.remove(i)
+            agent.Friends = rand.sample(friendList,  # Agents cannot be friends with themselves
                                    rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
+            friendList.append(i)
 
-            friends2 = list(set([rand.choice(range(num_agents)) for x in
-                                range(rand.choice(range(self.Friend_int[0], self.Friend_int[1])))]))
-
-
-            agent.Friends = friends
-
-
-            self.Agents.append(agent)
+            self.Agents[i] = agent
 
 
 
@@ -108,7 +95,7 @@ class Engine:
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
                 agent.UpdateBudget(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
-
+    @timer
     def RunSocial(self, num_iterations):
         self.UtilityHandler.SolveNormal()
         if num_iterations > 1:
