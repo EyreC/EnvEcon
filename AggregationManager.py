@@ -1,11 +1,66 @@
 import pandas as pd
 import numpy as np
+import os as os
+import random as rand
 
 class AggregationManager:
     def __init__(self, eG, eN):
         self.eG = eG
         self.eN = eN
 
+
+
+    def AddSimulationToCSV(self, agents, total_periods, type):
+        if type == 'normal':
+            filepath = './normal_simulation.csv'
+        elif type == 'social':
+            filepath = './social_simulation.csv'
+        elif type == 'benchmark':
+            filepath = './benchmark_simulation.csv'
+
+        file_exists = os.path.exists(filepath)
+
+
+        total_emissions = []
+        total_green = []
+        total_normal = []
+
+        for period in range(total_periods):
+            green_emissions = sum(
+                [agent.Qrecords[period] * self.eG for agent in agents if agent.PlanRecords[period] == 'Green'])
+            normal_emissions = sum(
+                [agent.Qrecords[period] * self.eN for agent in agents if agent.PlanRecords[period] == 'Normal'])
+            period_emissions = float(green_emissions + normal_emissions)
+            period_green = sum([1 for agent in agents if agent.PlanRecords[period] == 'Green'])
+            period_normal = sum([1 for agent in agents if agent.PlanRecords[period] == 'Normal'])
+
+
+            total_emissions.append(period_emissions)
+            total_green.append(period_green)
+            total_normal.append(period_normal)
+
+        df_dict = {
+            'Period': [i for i in range(total_periods)],
+            'TotalEmission': total_emissions,
+            'GreenUsers': total_green,
+            'NormalUsers': total_normal
+        }
+        df = pd.DataFrame(df_dict)
+
+        if file_exists:
+            existing_df = pd.read_csv(filepath)
+
+            prev_sim_index = max(existing_df['SimulationIndex']) # previous simulation index
+
+            simulation_index = [prev_sim_index + 1 for i in range(total_periods)]
+            df['SimulationIndex'] = simulation_index
+            save_df = pd.concat([existing_df, df], join='inner')
+            save_df.to_csv(filepath)
+
+        else:
+            # add a column for the simulation number
+            df['SimulationIndex'] = [0 for i in range(total_periods)]
+            df.to_csv(filepath)
 
     # print num green delivery, normal delivery, total emissions
     def ReportStatsForPeriod(self,agents, period):
@@ -24,7 +79,6 @@ class AggregationManager:
 
 
     def ReportAllStats(self, agents, total_periods):
-        df_dict = {}
         total_emissions = []
         total_green = []
         total_normal =[]
@@ -37,6 +91,8 @@ class AggregationManager:
             period_emissions = float(green_emissions + normal_emissions)
             period_green = sum([1 for agent in agents if agent.PlanRecords[period] == 'Green'])
             period_normal = sum([1 for agent in agents if agent.PlanRecords[period] == 'Normal'])
+
+
             total_emissions.append(period_emissions)
             total_green.append(period_green)
             total_normal.append(period_normal)
@@ -50,6 +106,6 @@ class AggregationManager:
         df = pd.DataFrame(df_dict)
         df.set_index('Period', inplace=True)
         print(df)
-        #sort out printing
+
 
 

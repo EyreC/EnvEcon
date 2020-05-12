@@ -87,6 +87,7 @@ class Engine:
                 #agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
                 agent.EnterGenericRound(i,self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
+        self.SaveStats(self.Agents, num_iterations, 'normal')
 
     def RunNormalWithIncomeScaling(self, num_iterations):
         for i in range(num_iterations):
@@ -109,6 +110,7 @@ class Engine:
                     friends = [x for x in self.Agents if x.Id in agent.Friends]
                     agent.EnterSocialRound(i + 1, self.cG, self.cN, self.eG, self.eN, friends, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
+        self.SaveStats(self.Agents, num_iterations, 'social')
 
     def RunBenchMark(self, num_iterations):
         self.UtilityHandler.SolveNormal()
@@ -116,6 +118,7 @@ class Engine:
             for agent in self.Agents:
                 agent.EnterBenchMarkRound(i, self.cN, self.eN, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
+        self.SaveStats(self.Agents, num_iterations, 'benchmark')
 
 
     def PrintDeliveryShare(self):
@@ -130,6 +133,9 @@ class Engine:
 
     def ReportStatsAllStats(self,agents, periods):
         self.AggregationManager.ReportAllStats(agents, periods)
+
+    def SaveStats(self, agents, periods, type):
+        self.AggregationManager.AddSimulationToCSV(agents, periods, type)
 
 
 
