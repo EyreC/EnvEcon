@@ -93,12 +93,13 @@ class AggregationManager:
             simulation_index = [prev_sim_index + 1 for i in range(total_periods)]
             df['SimulationIndex'] = simulation_index
             save_df = pd.concat([existing_df, df], join='inner')
+            save_df.reset_index()
             save_df.to_csv(filepath)
 
         else:
             # add a column for the simulation number
             df['SimulationIndex'] = [0 for i in range(total_periods)]
-            df.to_csv(filepath)
+            df.to_csv(filepath, index = False)
 
     # print num green delivery, normal delivery, total emissions
     def ReportStatsForPeriod(self,agents, period):

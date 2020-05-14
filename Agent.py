@@ -123,10 +123,6 @@ class Agent:
     @timer
     def compare_generic_social(self, period, cG, cN, eG, eN, friends, utility_handler):
         # Eval utility for green delivery
-        util_generic = utility_handler.Generic_Utility_Function.subs(
-            [(S, utility_handler.Generic_Solved_S), (Q, utility_handler.Generic_Solved_Q)]  # Q,S subs (Q,S)
-        )
-
         util_green, util_normal = self.evaluate_green_normal_social(utility_handler, cG, cN, eG, eN, friends, period)
 
         # compare utilities
@@ -165,13 +161,7 @@ class Agent:
         self.CurrentUtility = self.compare_normal_to_no_plan(period, cN, eN, utility_handler)
     @timer
     def compare_normal_to_no_plan(self, period, cN, eN, utility_handler):
-        util_generic = utility_handler.Generic_Utility_Function.subs(
-            [(S, utility_handler.Generic_Solved_S), (Q, utility_handler.Generic_Solved_Q)]  # Q,S subs (Q,S)
-        )
-        util_normal = util_generic.subs(
-            [(e_rate, eN),  # emissions subs (e_rate)
-             (a, self.A), (b, self.B), (mu, self.EcoCon),  # agent params subs (a,b,mu)
-             (Y, self.Budget), (P, self.Price), (cGeneric, cN)]).evalf()
+        util_normal = utility_handler.LambdifyNormal(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
 
         if util_normal > 0:
             self.assign_normal(period, utility_handler, eN, cN)

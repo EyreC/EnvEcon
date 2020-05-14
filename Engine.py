@@ -59,6 +59,7 @@ class Engine:
     def GenerateAgents(self, num_agents):
         friendList = [j for j in range(num_agents)]
         for i in range(num_agents):
+            print(f"Generating agent {i}")
             # _id, a, b, mu, Y, p, friends = []):
 
             a = beta.rvs(self.A_int[0], self.A_int[1])  # replace with this line to draw from random beta distributino
