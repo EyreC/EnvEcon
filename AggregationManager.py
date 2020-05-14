@@ -42,7 +42,7 @@ class AggregationManager:
 
             df = pd.concat([df, agent_df], join='inner')
 
-        df.to_csv(filepath)
+        df.to_csv(filepath, index=False)
 
 
 
