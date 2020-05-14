@@ -93,8 +93,8 @@ class AggregationManager:
             simulation_index = [prev_sim_index + 1 for i in range(total_periods)]
             df['SimulationIndex'] = simulation_index
             save_df = pd.concat([existing_df, df], join='inner')
-            save_df.reset_index()
-            save_df.to_csv(filepath)
+
+            save_df.to_csv(filepath, index= False)
 
         else:
             # add a column for the simulation number

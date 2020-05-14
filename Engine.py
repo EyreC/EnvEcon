@@ -12,7 +12,7 @@ import datetime as dt
 
 class Engine:
 
-    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate, price_hike_interval,
+    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate,
                  delta_interval=[0, 0], friend_interval=[0, 0]):
 
 
@@ -56,7 +56,6 @@ class Engine:
 
         #inflation
         self.InflationRate = inflation_rate
-        self.PriceHikeInterval = price_hike_interval
 
         self.UtilityHandler = UtilityHandler()
 
@@ -125,15 +124,18 @@ class Engine:
         for i in range(num_iterations):
             for agent in self.Agents:
                 agent.EnterBenchMarkRound(i, self.cN, self.eN, self.UtilityHandler)
+                agent.UpdateBudget(i)
+            self.InflatePrices(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'benchmark')
 
     def InflatePrices(self, period):
+        # prices update once every x periods to emulate consumer capture tactics
         inf = 1 + self.InflationRate
         self.Price = inf * self.Price
-        if period % self.PriceHikeInterval == 0 and period != 0:
-            self.cG = inf * self.cG
-            self.cN = inf * self.cN
+        if period % Constants.PriceHikeInterval() == 0 and period != 0:
+            self.cG = inf**Constants.PriceHikeInterval() * self.cG
+            self.cN = inf**Constants.PriceHikeInterval() * self.cN
 
     def PrintDeliveryShare(self):
         greens = 0
@@ -154,16 +156,5 @@ class Engine:
     def SaveAgentSample(self, sample_size, periods, type):
         self.AggregationManager.AddAgentSampleToCSV(self.Agents, sample_size, periods, type)
 
-
-# if __name__ == '__main__':
-#     mode, k = 0.75, 500  # mode and concentration
-#
-#     beta_distribution_a = (mode * (k-2)) + 1
-#     beta_distribution_b = ((1-mode) * (k-2)) + 1
-#
-#     print('Initialising engine')
-#     engine = Engine(10, 3, [0.3,0.7], [0.3,0.6], [300,500], 100,20, 0.01, 0.03,[0.3,0.8],[0.3,0.8],[1,2])
-#     print('Starting normal rounds')
-#     engine.RunNormalWithIncomeScaling(7)
 
 

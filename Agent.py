@@ -121,7 +121,6 @@ class Agent:
         """
         self.CurrentUtility = self.compare_generic_social(period, cG, cN, eG, eN, friends, utility_handler)
 
-    @timer
     def compare_generic_social(self, period, cG, cN, eG, eN, friends, utility_handler):
         # Eval utility for green delivery
         util_green, util_normal = self.evaluate_green_normal_social(utility_handler, cG, cN, eG, eN, friends, period)
@@ -139,7 +138,6 @@ class Agent:
             self.assign_utility_disparity(period, util_green, util_normal)
             return util_normal
 
-    @timer
     def evaluate_green_normal_social(self, utility_handler, cG, cN, eG, eN, friends, period):
         util_green = utility_handler.LambdifySocial(self.A,self.B,self.EcoCon,self.Budget,self.Price, eG, cG, self.Delta,
                                                     sum([1 for friend in friends if friend.PlanRecords[period - 1] == 'Green']) / len(friends))
@@ -148,11 +146,9 @@ class Agent:
 
         return util_green, util_normal
 
-    @timer
     def assign_green_social(self, period, utility_handler, eG, cG):
         self.assign_green(period, utility_handler, eG, cG)
 
-    @timer
     def assign_normal_social(self, period, utility_handler, eN, cN):
         self.assign_normal(period, utility_handler, eN, cN)
 
