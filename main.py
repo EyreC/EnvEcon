@@ -14,7 +14,7 @@ def main():
 
 
     print('Initialising engine')
-    engine = Engine(50, 100, [alpha_a, alpha_b], [0.00003, 0.0006], [log_income_mean, log_income_std], 30, 20, 0.95, 1, [0.00003, 0.00005], [1, 2])
+    engine = Engine(50, 100, [alpha_a, alpha_b], [0.00003, 0.0006], [log_income_mean, log_income_std], 30, 20, 0.95, 1, 0.03, 5,[0.00003, 0.00005], [1, 2])
     print('Starting normal rounds')
     engine.RunSocial(10)
 

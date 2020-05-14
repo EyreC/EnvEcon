@@ -1,5 +1,6 @@
 from EnvSymbols import *  # Also imports math and sympy
 from custom_timer import *
+from Constants import *
 
 class Agent:
 
@@ -174,8 +175,6 @@ class Agent:
 
 
 
-    def UpdateBudget(self,period, fraction_of_savings):
-        # subtract pay outs P*Q
-        #self.Budget -= self.Price * self.Qrecords[period]
+    def UpdateBudget(self,period):
         # add savings
-        self.Budget += fraction_of_savings * self.Srecords[period]
+        self.Budget += Constants.FractionOfSavings() * self.Srecords[period]

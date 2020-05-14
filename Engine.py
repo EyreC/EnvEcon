@@ -12,7 +12,7 @@ import datetime as dt
 
 class Engine:
 
-    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN,
+    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate, price_hike_interval,
                  delta_interval=[0, 0], friend_interval=[0, 0]):
 
 
@@ -53,6 +53,10 @@ class Engine:
         self.cN = cN
         self.eG = eG
         self.eN = eN
+
+        #inflation
+        self.InflationRate = inflation_rate
+        self.PriceHikeInterval = price_hike_interval
 
         self.UtilityHandler = UtilityHandler()
 
@@ -110,6 +114,8 @@ class Engine:
                     # find this agent's friends
                     friends = [x for x in self.Agents if x.Id in agent.Friends]
                     agent.EnterSocialRound(i + 1, self.cG, self.cN, self.eG, self.eN, friends, self.UtilityHandler)
+                    agent.UpdateBudget(i)
+                self.InflatePrices(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'social')
         self.SaveAgentSample(3, num_iterations, 'social')
@@ -122,6 +128,12 @@ class Engine:
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'benchmark')
 
+    def InflatePrices(self, period):
+        inf = 1 + self.InflationRate
+        self.Price = inf * self.Price
+        if period % self.PriceHikeInterval == 0 and period != 0:
+            self.cG = inf * self.cG
+            self.cN = inf * self.cN
 
     def PrintDeliveryShare(self):
         greens = 0
