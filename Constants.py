@@ -5,3 +5,6 @@ class Constants:
     @staticmethod
     def PriceHikeInterval():
         return 5
+    @staticmethod
+    def PriceHikeInterval():
+        return 5

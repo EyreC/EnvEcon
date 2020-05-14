@@ -15,19 +15,17 @@ class Engine:
     def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate,
                  delta_interval=[0, 0], friend_interval=[0, 0]):
 
-
-
         """
         The Engine class represents the social system, composed of agents making decisions between e-commerce delivery
         options. The Engine has
 
         :param num_agents:      Number of agents interacting in the model
-        :param price:           Price
+        :param price:           The average price of e-commerce goods
         :param a_interval:      Min/ max bounds of a, preference for consumption (coefficient of ln(Q))
         :param mu_interval:     Min/ max bounds of mu, preference for savings (coefficient of ln(S))
         :param income_interval: Min/ max bounds of Y, income
-        :param cG:              Cost per unit of green delivery
-        :param cN:              Cost per unit of normal delivery
+        :param cG:              The price per period of green delivery (say, monthly subscription price)
+        :param cN:              The price per period of normal delivery (monthly subscription price)
         :param eG:              Emissions per unit of green delivery
         :param eN:              Emissions per unit of normal delivery
         :param omega_interval:  Min/ max bounds of omega,
@@ -36,7 +34,7 @@ class Engine:
         """
 
         # Managers
-        self.AggregationManager = AggregationManager(eG, eN)
+        self.AggregationManager = AggregationManager(eG, eN, cG, cN)
 
         ##document variables
         self.Agents = [0 for i in range(num_agents)]
@@ -76,22 +74,21 @@ class Engine:
             # assign friends
             friendList.remove(i)
             agent.Friends = rand.sample(friendList,  # Agents cannot be friends with themselves
-                                   rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
+                                        rand.choice(range(self.Friend_int[0], self.Friend_int[1])))
             friendList.append(i)
 
             self.Agents[i] = agent
-
-
 
     def RunNormal(self, num_iterations):
         self.UtilityHandler.SolveNormal()
         for i in range(num_iterations):
             for agent in tqdm(self.Agents):  # tqdm will time how long it takes to maximise each agent
                 #  cG, cN, eG, eN
-                #agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
-                agent.EnterGenericRound(i,self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
+                # agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
+                agent.EnterGenericRound(i, self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'normal')
+        self.SaveAgentSample(3, num_iterations, 'normal')
 
     def RunNormalWithIncomeScaling(self, num_iterations):
         for i in range(num_iterations):
@@ -100,15 +97,17 @@ class Engine:
                 agent.EnterRound(i, self.cG, self.cN, self.eG, self.eN)
                 agent.UpdateBudget(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
+
     @timer
     def RunSocial(self, num_iterations):
-        self.UtilityHandler.SolveNormal()
+        self.UtilityHandler.SolveNormal()  # The first round is solved 'normally' without social effect
+
         if num_iterations > 1:
             for agent in self.Agents:
                 agent.EnterGenericRound(0, self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
             self.UtilityHandler.SolveSocial()
-            for i in range (num_iterations - 1):
-                print(f"Starting Social Round {i+1}")
+            for i in range(num_iterations - 1):
+                print(f"Starting Social Round {i + 1}")
                 for agent in self.Agents:
                     # find this agent's friends
                     friends = [x for x in self.Agents if x.Id in agent.Friends]
@@ -147,13 +146,20 @@ class Engine:
     def ReportStatsForPeriod(self, period):
         self.AggregationManager.ReportStatsForPeriod(self.Agents, period)
 
-    def ReportStatsAllStats(self,agents, periods):
+    def ReportStatsAllStats(self, agents, periods):
         self.AggregationManager.ReportAllStats(agents, periods)
 
     def SaveStats(self, agents, periods, type):
         self.AggregationManager.AddSimulationToCSV(agents, periods, type)
 
     def SaveAgentSample(self, sample_size, periods, type):
+        """
+
+        :param sample_size: Stores a random sample of the number of agents in current
+        :param periods:
+        :param type:
+        :return:
+        """
         self.AggregationManager.AddAgentSampleToCSV(self.Agents, sample_size, periods, type)
 
 
