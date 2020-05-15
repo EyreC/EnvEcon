@@ -117,7 +117,7 @@ class Engine:
 
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'normal')
-        self.SaveAgentSample(3, num_iterations, 'normal')
+        self.SaveAgentSample(Constants.SampleSize(), num_iterations, 'normal')
 
     def RunNormalWithIncomeScaling(self, num_iterations):
         """
@@ -160,7 +160,7 @@ class Engine:
 
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'social')
-        self.SaveAgentSample(3, num_iterations, 'social')
+        self.SaveAgentSample(Constants.SampleSize(), num_iterations, 'social')
 
     @timer
     def RunBenchMark(self, num_iterations):

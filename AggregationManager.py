@@ -34,7 +34,7 @@ class AggregationManager:
         sample_pool = sorted(sample_pool, key=lambda x: x.Id, reverse=False)
 
         cols = ['Period', 'AgentId', 'Budget', 'SelectedDeliveryPlan', 'UtilityIfGreen', 'UtilityIfNormal',
-                'UtilityDisparity', 'Emissions']
+                'UtilityDisparity', 'Emissions', 'EcoCon']
         df = pd.DataFrame(columns=cols)
 
         for i, agent in enumerate(sample_pool):
@@ -57,6 +57,8 @@ class AggregationManager:
             plan_items = sorted([kv for kv in agent.PlanRecords.items()], key=lambda x: x[0])
             plan = [kv[1] for kv in plan_items]
 
+            eco_con = [agent.EcoCon for i in periods]
+
             agent_df['Period'] = periods
             agent_df['AgentId'] = ids
             agent_df['Budget'] = budgets
@@ -65,6 +67,7 @@ class AggregationManager:
             agent_df['UtilityIfNormal'] = utility_if_normal
             agent_df['UtilityDisparity'] = utility_disparity
             agent_df['Emissions'] = emissions
+            agent_df['EcoCon'] = eco_con
 
             df = pd.concat([df, agent_df], join='inner')
 

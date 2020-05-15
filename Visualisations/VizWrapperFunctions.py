@@ -121,3 +121,111 @@ def green_adopters_by_green_delivery_price_plotter(dfs: list, labels: list):
         ax.plot(prices, proportion_green, label=labels[i])
         ax.scatter(prices, proportion_green)
     ax.legend(loc='upper left')
+
+
+def agent_plotter(df, plot_type, group_type):
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    ax.set_title(f'Agent {plot_type} by {group_type}')
+    ax.set_ylabel(f'{plot_type}')
+    ax.set_xlabel('Period')
+
+    num_of_agents = len(df['AgentId'].unique())
+    periods = len(df['Period'].unique())
+    period_array = [i for i in range(periods)]
+
+    is_first_high = True
+    is_first_med = True
+    is_first_low = True
+    is_first_arr = [is_first_high, is_first_med, is_first_low]
+
+    for i in range(num_of_agents):
+        # get agent data
+        agent_data = df.loc[df['AgentId'] == i]
+        high_med_low = get_high_med_low(agent_data, group_type)
+        color = get_color(group_type, high_med_low)
+        if plot_type == 'Emissions':
+            emissions = agent_data['Emissions']
+            plot_data(ax, period_array, emissions, color, high_med_low, is_first_arr)
+            # ax.plot(period_array, emissions, c=color)
+            # ax.scatter(period_array, emissions,c=color)
+        elif plot_type == 'Utility Disparity':
+            utility_disparity = agent_data['UtilityDisparity']
+            plot_data(ax, period_array, utility_disparity, color, high_med_low, is_first_arr)
+            ax.plot(period_array, utility_disparity, c=color)
+            ax.scatter(period_array, utility_disparity, c=color)
+
+    # plot zero line
+    zero_line = [0 for i in period_array]
+    ax.plot(period_array, zero_line, c='k', label='Zero Line')
+
+    ax.legend(loc='upper left')
+
+
+def plot_data(ax, period_array, data, color, var_type, is_first_arr):
+    if var_type == "High":
+        ax.scatter(period_array, data, c=color)
+        if is_first_arr[0]:
+            ax.plot(period_array, data, c=color, label='High')
+            is_first_arr[0] = False
+        else:
+            ax.plot(period_array, data, c=color)
+    elif var_type == 'Medium':
+        ax.scatter(period_array, data, c=color)
+        if is_first_arr[1]:
+            ax.plot(period_array, data, c=color, label='Medium')
+            is_first_arr[1] = False
+        else:
+            ax.plot(period_array, data, c=color)
+    elif var_type == "Low":
+        ax.scatter(period_array, data, c=color)
+        if is_first_arr[2]:
+            ax.plot(period_array, data, c=color, label='Low')
+            is_first_arr[2] = False
+        else:
+            ax.plot(period_array, data, c=color)
+
+
+def get_high_med_low(agent_data, group_type):
+    if group_type == 'Income':
+        return get_income_type(agent_data)
+    elif group_type == 'Eco Consciousness':
+        return get_eco_type(agent_data)
+
+
+def get_income_type(agent_data):
+    final_period_budget = agent_data['Budget'].iloc[-1]
+    if final_period_budget > 5500:
+        return 'High'
+    elif final_period_budget > 2000:
+        return 'Medium'
+    else:
+        return 'Low'
+
+
+def get_eco_type(agent_data):
+    eco_con = agent_data['EcoCon'].iloc[-1]
+    if eco_con > 0.006:
+        return 'High'
+    elif eco_con > 0.004:
+        return 'Medium'
+    else:
+        return 'Low'
+
+
+def get_color(group_type, var_type):
+    if group_type == 'Income':
+        return get_color_from_high_mid_low(var_type)
+
+    elif group_type == 'Eco Consciousness':
+        return get_color_from_high_mid_low(var_type)
+
+
+def get_color_from_high_mid_low(var_type):
+    if var_type == "High":
+        return 'b'
+    elif var_type == 'Medium':
+        return 'm'
+    elif var_type == "Low":
+        return 'c'
+

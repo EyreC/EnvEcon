@@ -7,3 +7,7 @@ class Constants:
     @staticmethod
     def PriceHikeInterval():
         return 6
+
+    @staticmethod
+    def SampleSize():
+        return 15
