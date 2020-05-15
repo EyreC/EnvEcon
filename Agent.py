@@ -7,7 +7,6 @@ This file stores the Agent class.
 """
 
 from EnvSymbols import *  # Also imports math and sympy
-from custom_timer import *
 from Constants import *
 
 

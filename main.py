@@ -1,45 +1,76 @@
+#!usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+main.py:
+
+This file runs the main program. It accepts
+"""
+
 from Engine import *
 from RandomNumbers import *
 
 import copy
 
 
+@timer
 def main():
+    
+    # Engine inputs
+    num_agents = 1000  # ETA 90-100 seconds
+    price_of_average_good = 12  
+    alpha_mean, alpha_std = 0.2, 0.04  
+    mu_mean, mu_std = 0.005, 0.002  
+    median_monthly_income = 22100 / 12  
+    log_income_std = 0.4219793
+    price_of_normal_delivery = 8
+    emissions_of_green_delivery = 0.9  
+    emissions_of_normal_delivery = 1
+    inflation_rate = 0.015
 
-    # Shape parameters for beta distribution of alpha in utility function
-    alpha_a, alpha_b = find_beta_shape_params(mean=0.2, stdev=0.04)
-
-    # Shape parameters for lognormal distribution of income in utility function
-    median_monthly_income = 22100 / 12
+    # Calculations for distribution shape parameters
+    alpha_a, alpha_b = find_beta_shape_params(mean=alpha_mean, stdev=alpha_std)
+    mu_a, mu_b = find_beta_shape_params(mean=mu_mean, stdev=mu_std)
     log_income_mean = np.log(median_monthly_income)  # In a normal distribution, mean = median = mode.
-    log_income_std = 0.4219793  # std of log-income of the bottom 97% of population
 
-    # num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate,
-    # delta_interval=[0, 0], friend_interval=[0, 0])
+    # Initiate engine with input values
+    engine = Engine(num_agents=num_agents, price=price_of_average_good, a_params=[alpha_a, alpha_b],
+                    mu_params=[0.003, 0.006], income_interval=[log_income_mean, log_income_std],
+                    cG=0, cN=price_of_normal_delivery, eG=emissions_of_green_delivery, eN=emissions_of_normal_delivery, 
+                    inflation_rate=inflation_rate, delta_interval=[0.00003, 0.00005], friend_interval=[1, 2])
 
-    engine = Engine(num_agents=20, price=12, a_interval=[alpha_a, alpha_b], mu_interval=[0.03, 0.06],
-                    income_interval=[log_income_mean, log_income_std], cG=15, cN=8, eG=0.9, eN=1, inflation_rate=0.03,
-                    delta_interval=[0.00003, 0.00005], friend_interval=[1, 2])
-    # print('Starting normal rounds')
 
-    cGs = range(15, 29, 5)  # Different prices
-    for cG in cGs:
-        periods = 5  # How many periods to be run
+    # Running simulations
+    prices_of_green_delivery = range(15, 31, 3)  # At what different prices of green delivery do you want to simulate?
 
-        engine_copy = copy.deepcopy(engine)
-        engine_copy.cG = cG
-        engine_copy.AggregationManager.cG = cG
-        engine_copy.RunBenchMark(periods)
+    periods = 12  # How many periods for each simulation to be ran?
 
-        engine_copy = copy.deepcopy(engine)
-        engine_copy.cG = cG
-        engine_copy.AggregationManager.cG = cG
-        engine_copy.RunNormal(periods)
+    for i in range(1): # How many times do you want the simulation to be ran?
+        for cG in prices_of_green_delivery:
 
-        engine_copy = copy.deepcopy(engine)
-        engine_copy.cG = cG
-        engine_copy.AggregationManager.cG = cG
-        engine_copy.RunSocial(periods)
+
+            engine_copy = copy.deepcopy(engine)
+            engine_copy.cG = cG
+            engine_copy.AggregationManager.cG = cG
+            engine_copy.RunBenchMark(periods)
+
+            engine_copy = copy.deepcopy(engine)
+            engine_copy.cG = cG
+            engine_copy.AggregationManager.cG = cG
+            engine_copy.RunNormal(periods)
+
+            engine_copy = copy.deepcopy(engine)
+            engine_copy.cG = cG
+            engine_copy.AggregationManager.cG = cG
+            engine_copy.RunSocial(periods)
+
+    print(f"\n{len(prices_of_green_delivery) * 3} simulations ran overall, reflecting the following prices of green "
+          f"delivery: {[i for i in prices_of_green_delivery]}.\n"
+          f"Number of agents: {num_agents}\n"
+          f"Median monthly income: {round(median_monthly_income, 2)}\n"
+          f"Price of average good: {price_of_average_good}\n"
+          f"Alpha average (stdev): {round(alpha_mean, 2)} ({round(alpha_std, 2)})\n"
+          f"Eco consciousness average (stdev): {round(mu_mean, 3)} ({round(mu_std, 3)})")
+
 
 if __name__ == '__main__':
     main()

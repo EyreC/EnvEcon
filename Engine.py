@@ -7,6 +7,7 @@ This file stores the Engine class.
 """
 
 from Agent import *  # also imports EnvSymbols, and imports within EnvSymbols
+from custom_timer import *
 from UtilityHandler import *
 from ErrorLogger import *
 from AggregationManager import *
@@ -20,7 +21,7 @@ from tqdm import tqdm
 
 class Engine:
 
-    def __init__(self, num_agents, price, a_interval, mu_interval, income_interval, cG, cN, eG, eN, inflation_rate,
+    def __init__(self, num_agents, price, a_params, mu_params, income_interval, cG, cN, eG, eN, inflation_rate,
                  delta_interval=[0, 0], friend_interval=[0, 0]):
         """
         The Engine class represents the social system, composed of agents making decisions between e-commerce delivery
@@ -28,8 +29,9 @@ class Engine:
 
         :param num_agents:      Number of agents interacting in the model
         :param price:           The average price of e-commerce goods
-        :param a_interval:      Mean/ variance a, preference for consumption (coefficient of ln(Q))
-        :param mu_interval:     Min/ max bounds of mu, the eco-consciousness
+        :param a_params:        Beta distribution of shape parameters a and b for Alpha: preference for consumption
+                                (coefficient of ln(Q))
+        :param mu_params:       Min/ max bounds of mu, the eco-consciousness
         :param income_interval: Mean/ stdev of Y, disposable income
         :param cG:              The price per period of green delivery (say, monthly subscription price)
         :param cN:              The price per period of normal delivery (monthly subscription price)
@@ -47,8 +49,8 @@ class Engine:
         ##document variables
         self.Agents = [0 for i in range(num_agents)]
         self.Price = price
-        self.A_int = a_interval
-        self.Mu_int = mu_interval
+        self.A_params = a_params
+        self.Mu_params = mu_params
         self.Income_int = income_interval
         self.Friend_int = friend_interval
         self.Delta_int = delta_interval
@@ -75,15 +77,15 @@ class Engine:
         """
         friendList = [j for j in range(num_agents)]
         for i in range(num_agents):
-            a = beta.rvs(self.A_int[0], self.A_int[1])  # draw from beta distribution
+            a = beta.rvs(self.A_params[0], self.A_params[1])  # draw from beta distribution
             b = 1 - a
 
-            # do we want eco-consciousness to be drawn from beta distribution?
-            # mu = beta.rvs(self.Mu_int[0], self.Mu_int[1])
-            mu = rand.uniform(self.Mu_int[0], self.Mu_int[1])
+            # TODO: do we want eco-consciousness to be drawn from beta distribution?
+            # mu = beta.rvs(self.Mu_params[0], self.Mu_params[1])
+            mu = rand.uniform(self.Mu_params[0], self.Mu_params[1])
 
             income = np.exp(norm.rvs(self.Income_int[0], self.Income_int[1]))
-            # income drawn from log-normal distribution, which we exponentiate back to get normal (level) income.
+            # income drawn from log-normal distribution, then exponentiated to get normal (level) income.
 
             delta = rand.uniform(self.Delta_int[0], self.Delta_int[1])
 
