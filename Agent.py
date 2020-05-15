@@ -1,3 +1,11 @@
+#!usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Agent.py:
+
+This file stores the Agent class.
+"""
+
 from EnvSymbols import *  # Also imports math and sympy
 from custom_timer import *
 from Constants import *
@@ -13,12 +21,14 @@ class Agent:
         :param a: Preference for consumption (coefficient of ln[Q])
         :param b: Preference for savings (coefficient of ln[S])
         :param mu: Eco-consicousness
-        :param Y: Income
-        :param p: price of green delivery
+        :param Y: Disposable income
+        :param p: Average price of
         :param omega:
         :param delta:
         :param friends: a list of agent ids who the Agent values the opinion of
         """
+        print(f"Initialising agent {_id}")
+
         self.Id = _id
 
         # Expression variables
@@ -70,15 +80,12 @@ class Agent:
             self.normal = self.assign_normal(period, utility_handler, eN, cN)  # TODO: don't need "self.normal ="?
             self.assign_budget_and_utilities_disparity(period, util_green, util_normal)
             return util_normal
-
-    @timer
+    
     def evaluate_green_normal(self, utility_handler, cG, cN, eG, eN):
         util_green = utility_handler.LambdifyNormal(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
         util_normal = utility_handler.LambdifyNormal(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
-
         return util_green, util_normal
-
-    @timer
+    
     def assign_green(self, period, utility_handler, eG, cG):
         self.CurrentPlan = 'Green'
         self.PlanRecords[period] = 'Green'
@@ -86,7 +93,6 @@ class Agent:
         self.Srecords[period] = utility_handler.Lambdify_S(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
         self.Erecords[period] = self.Qrecords[period] * eG
 
-    @timer
     def assign_normal(self, period, utility_handler, eN, cN):
         """
 
@@ -121,7 +127,7 @@ class Agent:
     def assign_choice(self):
         return
 
-    @timer
+    
     def EnterSocialRound(self, period, cG, cN, eG, eN, friends, utility_handler):
         """
         At each period (round),
@@ -171,11 +177,10 @@ class Agent:
     def assign_normal_social(self, period, utility_handler, eN, cN):
         self.assign_normal(period, utility_handler, eN, cN)
 
-    @timer
+    
     def EnterBenchMarkRound(self, period, cN, eN, utility_handler):
         self.CurrentUtility = self.compare_normal_to_no_plan(period, cN, eN, utility_handler)
 
-    @timer
     def compare_normal_to_no_plan(self, period, cN, eN, utility_handler):
         util_normal = utility_handler.LambdifyNormal(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
 

@@ -2,6 +2,10 @@ import functools
 import time
 
 def timer(func):
+    """
+    If you decorate a function with this, it will time the period taken to run the decorated function.
+    """
+
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
         tic = time.perf_counter()

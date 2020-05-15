@@ -1,3 +1,12 @@
+#!usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+EnvSymbols.py:
+
+The environment symbols will initiate each of the variable as a Sympy mathematical symbol, used for mathematical
+calculations
+"""
+
 import math as ma
 import sympy as sp
 from sympy import *

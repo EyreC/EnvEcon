@@ -1,6 +1,20 @@
+#!usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+UtilityHandler.py:
+
+The UtilityHandler will
+"""
+
+
 from EnvSymbols import *  # Also imports math and sympy
 
+
 class UtilityHandler:
+    """
+    UtilityHandler is a class that will solve the utility functions
+    """
+
     def __init__(self):
         self.Generic_Utility_Function = a * ln(Q) + b * ln(S) - a * ln(mu * e_rate * Q + 1)
         self.Generic_Utility_Function_QS = None
@@ -12,8 +26,11 @@ class UtilityHandler:
         self.LambdifyNormal = None
         self.LambdifySocial = None
 
-
     def SolveNormal(self):
+        """
+
+        :return:
+        """
         Q_sol, S_sol = self.max_Q_and_S(self.Generic_Utility_Function)
 
         self.Generic_Solved_S = S_sol
@@ -26,7 +43,7 @@ class UtilityHandler:
         self.add_lambdify_S(S_sol)
 
     def SolveSocial(self):
-        self.Generic_Utility_Function =  a * ln(Q) + b * ln(S) - a * ln(mu * e_rate * Q + 1) - a*delta*ln(1+F)
+        self.Generic_Utility_Function = a * ln(Q) + b * ln(S) - a * ln(mu * e_rate * Q + 1) - a * delta * ln(1 + F)
 
         Q_sol, S_sol = self.max_Q_and_S(self.Generic_Utility_Function)
 
@@ -67,11 +84,6 @@ class UtilityHandler:
 
     def add_lambdify_Q(self, func):
         self.Lambdify_Q = lambdify([a, b, mu, Y, P, e_rate, cGeneric], func)
-        print('here')
-
 
     def add_lambdify_S(self, func):
         self.Lambdify_S = lambdify([a, b, mu, Y, P, e_rate, cGeneric], func)
-
-
-

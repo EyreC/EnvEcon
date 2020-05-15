@@ -1,3 +1,12 @@
+#!usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AggregationManager.py:
+
+This file stores the AggregationManager class. The AggregationManager contains functions that reports the statistics of
+the Engine and Agents, and saves the statistics to csv files under ./SavedStats.
+"""
+
 import pandas as pd
 import numpy as np
 import os as os
@@ -5,6 +14,7 @@ import random as rand
 
 
 class AggregationManager:
+
     def __init__(self, eG, eN, cG, cN):
         self.eG = eG
         self.eN = eN
@@ -61,6 +71,14 @@ class AggregationManager:
         df.to_csv(filepath, index=False)
 
     def AddSimulationToCSV(self, agents, total_periods, type):
+        """
+        Save simulation statistics to CSV
+
+        :param agents:
+        :param total_periods:
+        :param type:
+        :return:
+        """
         if type == 'normal':
             filepath = './SavedStats/normal_simulation.csv'
         elif type == 'social':
@@ -74,8 +92,14 @@ class AggregationManager:
         total_utilities = []
         total_green = []
         total_normal = []
+        total_green_q = []
+        total_normal_q = []
+        total_q = []
 
         for period in range(total_periods):
+
+            incomes_list = [agent.BudgetHistory[period] for agent in agents]
+            average_income = sum(incomes_list) / len(incomes_list)
 
             green_emissions = sum(
                 [agent.Qrecords[period] * self.eG for agent in agents if agent.PlanRecords[period] == 'Green'])
@@ -92,20 +116,32 @@ class AggregationManager:
             period_green = sum([1 for agent in agents if agent.PlanRecords[period] == 'Green'])
             period_normal = sum([1 for agent in agents if agent.PlanRecords[period] == 'Normal'])
 
+            green_q = sum([agent.Qrecords[period] for agent in agents if agent.PlanRecords[period] == 'Green'])
+            normal_q = sum([agent.Qrecords[period] for agent in agents if agent.PlanRecords[period] == 'Normal'])
+            period_q = float(green_q + normal_q)
+
             total_emissions.append(period_emissions)
             total_utilities.append(period_utilities)
             total_green.append(period_green)
             total_normal.append(period_normal)
+
+            total_green_q.append(green_q)
+            total_normal_q.append(normal_q)
+            total_q.append(period_q)
 
         df_dict = {
             'SimulationIndex': [0 for i in range(total_periods)],
             'PriceOfGreenDelivery': [self.cG for i in range(total_periods)],
             'PriceOfNormalDelivery': [self.cN for i in range(total_periods)],
             'Period': [i for i in range(total_periods)],
+            'AverageIncome': average_income,
             'GreenUsers': total_green,
             'NormalUsers': total_normal,
             'TotalEmission': total_emissions,
-            'TotalUtility': total_utilities
+            'TotalUtility': total_utilities,
+            'QwithGreen': total_green_q,
+            'QwithNormal': total_normal_q,
+            'TotalQ': total_q
         }
         df = pd.DataFrame(df_dict)
 
@@ -127,6 +163,13 @@ class AggregationManager:
 
     # print num green delivery, normal delivery, total emissions
     def ReportStatsForPeriod(self, agents, period):
+        """
+        Report stats for a period (print df in terminal)
+
+        :param agents:
+        :param period:
+        :return:
+        """
         green_emissions = sum(
             [agent.Qrecords[period] * self.eG for agent in agents if agent.PlanRecords[period] == 'Green'])
         normal_emissions = sum(
@@ -151,6 +194,13 @@ class AggregationManager:
         print(df)
 
     def ReportAllStats(self, agents, total_periods):
+        """
+        Report stats for all periods (print df in terminal)
+
+        :param agents:
+        :param total_periods:
+        :return:
+        """
         total_emissions = []
         total_utilities = []
         total_green = []
