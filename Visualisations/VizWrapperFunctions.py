@@ -9,6 +9,7 @@ This file contains functions that assist with visualisations.
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from Constants import *
 
 
 # %matplotlib inline
@@ -195,9 +196,9 @@ def get_high_med_low(agent_data, group_type):
 
 def get_income_type(agent_data):
     final_period_budget = agent_data['Budget'].iloc[-1]
-    if final_period_budget > 5500:
+    if final_period_budget > Constants.HighIncomeThresh():
         return 'High'
-    elif final_period_budget > 2000:
+    elif final_period_budget > Constants.MedIncomeThresh():
         return 'Medium'
     else:
         return 'Low'
