@@ -19,7 +19,7 @@ def main():
     num_agents = 1000  # ETA 90-100 seconds
     price_of_average_good = 65
     alpha_mean, alpha_std = 0.2, 0.04  
-    mu_mean, mu_std = 0.07, 0.03
+    mu_mean, mu_std = 0.05, 0.025
     median_monthly_income = 22100 / 12  
     log_income_std = 0.4219793
     price_of_normal_delivery = 8
