@@ -17,7 +17,7 @@ def main():
     
     # Engine inputs
     num_agents = 1000  # ETA 90-100 seconds
-    price_of_average_good = 12  
+    price_of_average_good = 12
     alpha_mean, alpha_std = 0.2, 0.04  
     mu_mean, mu_std = 0.005, 0.002  
     median_monthly_income = 22100 / 12  
@@ -34,17 +34,16 @@ def main():
 
     # Initiate engine with input values
     engine = Engine(num_agents=num_agents, price=price_of_average_good, a_params=[alpha_a, alpha_b],
-                    mu_params=[0.003, 0.006], income_interval=[log_income_mean, log_income_std],
+                    mu_params=[mu_mean, mu_std], income_interval=[log_income_mean, log_income_std],
                     cG=0, cN=price_of_normal_delivery, eG=emissions_of_green_delivery, eN=emissions_of_normal_delivery, 
                     inflation_rate=inflation_rate, delta_interval=[0.00003, 0.00005], friend_interval=[1, 2])
 
 
     # Running simulations
     prices_of_green_delivery = range(15, 31, 3)  # At what different prices of green delivery do you want to simulate?
-
     periods = 12  # How many periods for each simulation to be ran?
 
-    for i in range(1): # How many times do you want the simulation to be ran?
+    for i in range(1): # How many times do you want the simulation to be ran? (monte carlo)
         for cG in prices_of_green_delivery:
 
 
