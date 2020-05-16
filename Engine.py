@@ -80,9 +80,7 @@ class Engine:
             a = beta.rvs(self.A_params[0], self.A_params[1])  # draw from beta distribution
             b = 1 - a
 
-            # TODO: do we want eco-consciousness to be drawn from beta distribution?
-            # mu = beta.rvs(self.Mu_params[0], self.Mu_params[1])
-            mu = rand.uniform(self.Mu_params[0], self.Mu_params[1])
+            mu = beta.rvs(self.Mu_params[0], self.Mu_params[1])
 
             income = np.exp(norm.rvs(self.Income_int[0], self.Income_int[1]))
             # income drawn from log-normal distribution, then exponentiated to get normal (level) income.

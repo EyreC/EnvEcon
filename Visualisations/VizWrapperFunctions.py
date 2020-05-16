@@ -97,7 +97,6 @@ def emissions_by_green_delivery_price_plotter(dfs: list, labels: list):
     ax.legend(loc='upper left')
 
 
-
 def aggregate_green_adopters_by_green_delivery_price(df):
     max_period = df['Period'].max()  # Find number of green adopters in the latest period
     df = df[df['Period'] == max_period]
@@ -106,12 +105,9 @@ def aggregate_green_adopters_by_green_delivery_price(df):
     return green_users / (green_users + normal_users)
 
 
-
 def green_adopters_by_green_delivery_price_plotter(dfs: list, labels: list):
     fig, ax = plt.subplots()
-
     max_period = dfs[0]['Period'].max()
-
     ax.set_title(f'Emissions after {max_period + 1} periods, by price')
     ax.set_ylabel('Proportion of agents adoption green delivery')
     ax.set_xlabel('Price of green delivery')
