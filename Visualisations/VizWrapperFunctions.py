@@ -81,7 +81,7 @@ def emissions_by_green_delivery_price_plotter(dfs: list, labels: list):
     """
     How does emissions change according to the different prices of green delivery
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(12,8))
 
     max_period = dfs[0]['Period'].max()
 
