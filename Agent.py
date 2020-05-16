@@ -181,7 +181,9 @@ class Agent:
         self.CurrentUtility = self.compare_normal_to_no_plan(period, cN, eN, utility_handler)
 
     def compare_normal_to_no_plan(self, period, cN, eN, utility_handler):
+
         util_normal = utility_handler.LambdifyNormal(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
+
 
         if util_normal > 0:
             self.assign_normal(period, utility_handler, eN, cN)
@@ -196,3 +198,25 @@ class Agent:
     def UpdateBudget(self,period):
         # add savings
         self.Budget += Constants.FractionOfSavings() * self.Srecords[period]
+
+    def ResetAgent(self, price):
+
+
+        # Expression variables
+        self.Budget = self.BudgetHistory[0]
+        self.Price = price
+
+        # Current period props
+        self.CurrentPlan = 'Normal'  # plan defaults to normal delivery
+        self.CurrentUtility = 0
+
+        self.Qrecords = {}
+        self.Srecords = {}
+        self.BudgetHistory = {}
+        self.PlanRecords = {}
+        self.GreenUtility = {}
+        self.NormalUtility = {}
+        self.GenericUtility = {}
+
+        self.UtilityDisparity = {}
+        self.Erecords = {}

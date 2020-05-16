@@ -21,6 +21,8 @@ class AggregationManager:
         self.cG = cG
         self.cN = cN
 
+    def Reset(self, cG):
+        self.cG = cG
     def AddAgentSampleToCSV(self, agents, sample_size, total_periods, type):
         if type == 'normal':
             filepath = './SavedStats/normal_agent.csv'

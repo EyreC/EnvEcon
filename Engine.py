@@ -81,8 +81,10 @@ class Engine:
             b = 1 - a
 
             mu = beta.rvs(self.Mu_params[0], self.Mu_params[1])
-
+            if round(mu, 5) == 0:
+                mu = 0.0001
             income = np.exp(norm.rvs(self.Income_int[0], self.Income_int[1]))
+
             # income drawn from log-normal distribution, then exponentiated to get normal (level) income.
 
             delta = rand.uniform(self.Delta_int[0], self.Delta_int[1])
@@ -187,7 +189,7 @@ class Engine:
         :param period: what period the current Engine is simulating
         """
         inf = ((self.InflationRate + 1) ** (
-                    1 / 12)) - 1  # Inflation rate is given annually. Take monthly rate with CAGR
+                    1 / 12))  # Inflation rate is given annually. Take monthly rate with CAGR
 
         self.Price = inf * self.Price
         if period % Constants.PriceHikeInterval() == 0 and period != 0:
@@ -212,3 +214,13 @@ class Engine:
 
     def SaveAgentSample(self, sample_size, periods, type):
         self.AggregationManager.AddAgentSampleToCSV(self.Agents, sample_size, periods, type)
+
+    def ResetEngine(self, price, cG, cN):
+        for agent in self.Agents:
+            agent.ResetAgent(price)
+        self.Price = price
+        self.cG = cG
+        self.cN = cN
+
+        self.AggregationManager.Reset(cG)
+        self.UtilityHandler.Reset()

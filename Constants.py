@@ -2,7 +2,7 @@ class Constants:
 
     @staticmethod
     def FractionOfSavings():
-        return 0.1
+        return 0.01
 
     @staticmethod
     def PriceHikeInterval():

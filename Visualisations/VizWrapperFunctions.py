@@ -14,6 +14,9 @@ from Constants import *
 
 # %matplotlib inline
 
+def testfunc(x):
+    print(x)
+
 def aggregate_emissions(df):
     """
     Aggregates the emissions grouped by Period.
