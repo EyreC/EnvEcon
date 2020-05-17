@@ -114,6 +114,8 @@ class Engine:
             for agent in self.Agents:
                 #  cG, cN, eG, eN
                 agent.EnterGenericRound(i, self.cG, self.cN, self.eG, self.eN, self.UtilityHandler)
+                agent.UpdateBudget(i)
+            self.InflatePrices(i)
 
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'normal')

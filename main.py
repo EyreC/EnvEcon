@@ -40,10 +40,10 @@ def main():
 
 
     # Running simulations
-    prices_of_green_delivery = range(15, 31, 3)  # At what different prices of green delivery do you want to simulate?
+    prices_of_green_delivery = range(8, 24, 3)  # At what different prices of green delivery do you want to simulate?
     periods = 24  # How many periods for each simulation to be ran?
 
-    for i in range(50): # How many times do you want the simulation to be ran? (monte carlo)
+    for i in range(1): # How many times do you want the simulation to be ran? (monte carlo)
         for cG in prices_of_green_delivery:
 
 
