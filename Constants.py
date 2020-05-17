@@ -19,3 +19,7 @@ class Constants:
     @staticmethod
     def MedIncomeThresh():
         return 1841
+
+    @staticmethod
+    def CO2PerDollar():
+        return 128.9

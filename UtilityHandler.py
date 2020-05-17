@@ -43,7 +43,7 @@ class UtilityHandler:
         self.add_lambdify_S(S_sol)
 
     def SolveSocial(self):
-        self.Generic_Utility_Function = a * ln(Q) + b * ln(S) - a * ln(mu * e_rate * Q + 1) - a * delta * ln(1 + F)
+        self.Generic_Utility_Function = a * ln(Q) + b * ln(S) - a * ln(mu * e_rate * Q + 1) + a * delta * ln(1 + F)
 
         Q_sol, S_sol = self.max_Q_and_S(self.Generic_Utility_Function)
 

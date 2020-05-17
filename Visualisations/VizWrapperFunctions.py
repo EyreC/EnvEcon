@@ -14,8 +14,6 @@ from Constants import *
 
 # %matplotlib inline
 
-def testfunc(x):
-    print(x)
 
 def aggregate_emissions(df):
     """
@@ -67,37 +65,49 @@ def utilities_plotter(dfs: list, labels: list):
         ax.scatter(periods, utilities)
     ax.legend(loc='upper left')
 
+def get_aggregate_color(var_type):
+    if var_type == 'Benchmark':
+        return 'b'
+    elif var_type == 'Normal':
+        return 'm'
+    elif var_type == 'Social':
+        return 'c'
 
-def aggregate_emissions_by_green_delivery_price(df):
+def aggregate_by_green_delivery_price(df, variable):
     max_period = df['Period'].max()
     df = df[df['Period'] == max_period]
-    return df.groupby('PriceOfGreenDelivery').agg({'TotalEmission': np.mean})['TotalEmission']
+    return df.groupby('PriceOfGreenDelivery').agg({variable: np.mean})[variable]
 
 
-def aggregate_utility_by_green_delivery_price(df):
+def variance_by_green_delivery_price(df, variable):
     max_period = df['Period'].max()
     df = df[df['Period'] == max_period]
-    return df.groupby('PriceOfGreenDelivery').agg({'TotalUtility': np.mean})['TotalUtility']
-
+    return df.groupby('PriceOfGreenDelivery').agg({variable: np.std})[variable]
 
 def emissions_by_green_delivery_price_plotter(dfs: list, labels: list):
     """
     How does emissions change according to the different prices of green delivery
     """
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots(figsize=(12, 8))
 
     max_period = dfs[0]['Period'].max()
 
-    ax.set_title(f'Emissions after {max_period} periods, by price')
-    ax.set_ylabel('Total emissions')
-    ax.set_xlabel('Price of green delivery')
+    ax.set_title(f'Emissions after {max_period} periods, by price', family='serif')
+    ax.set_ylabel('Total emissions', family='serif')
+    ax.set_xlabel('Price of green delivery', family='serif')
     for i, df in enumerate(dfs):
-        emissions = aggregate_emissions_by_green_delivery_price(df)
+        emissions = aggregate_by_green_delivery_price(df, 'TotalEmission')
         prices = df.PriceOfGreenDelivery.unique()
+        error = variance_by_green_delivery_price(df, 'TotalEmission')
 
-        ax.plot(prices, emissions, label=labels[i])
-        ax.scatter(prices, emissions)
+        color = get_aggregate_color(labels[i])
+
+        ax.plot(prices, emissions, label=labels[i], c=color)
+        ax.fill_between(prices, emissions - error, emissions + error, color=color, alpha=0.3)
+        ax.scatter(prices, emissions, c=color)
     ax.legend(loc='upper left')
+    fig.savefig(f'aggregate_emissions_chart.png', dpi=fig.dpi)
+
 
 
 def aggregate_green_adopters_by_green_delivery_price(df):
@@ -115,7 +125,7 @@ def green_adopters_by_green_delivery_price_plotter(dfs: list, labels: list):
     ax.set_ylabel('Proportion of agents adoption green delivery')
     ax.set_xlabel('Price of green delivery')
     for i, df in enumerate(dfs):
-        proportion_green = aggregate_emissions_by_green_delivery_price(df)
+        proportion_green = aggregate_by_green_delivery_price(df, 'TotalEmission')
         prices = df.PriceOfGreenDelivery.unique()
 
         ax.plot(prices, proportion_green, label=labels[i])
@@ -160,6 +170,7 @@ def agent_plotter(df, plot_type, group_type):
     ax.plot(period_array, zero_line, c='k', label='Zero Line')
 
     ax.legend(loc='upper left')
+    fig.savefig(f'agent_{plot_type}_by_{group_type}_chart.png', dpi=fig.dpi)
 
 
 def plot_data(ax, period_array, data, color, var_type, is_first_arr):

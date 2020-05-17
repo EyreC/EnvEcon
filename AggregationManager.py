@@ -110,7 +110,7 @@ class AggregationManager:
                 [agent.Qrecords[period] * self.eG for agent in agents if agent.PlanRecords[period] == 'Green'])
             normal_emissions = sum(
                 [agent.Qrecords[period] * self.eN for agent in agents if agent.PlanRecords[period] == 'Normal'])
-            period_emissions = float(green_emissions + normal_emissions)
+            period_emissions = float(green_emissions + normal_emissions) / 1000 # divide 1000 for tons instead of kg of CO2
 
             green_utilities = sum(
                 [agent.GreenUtility[period] for agent in agents if agent.PlanRecords[period] == 'Green'])

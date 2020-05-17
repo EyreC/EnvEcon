@@ -90,7 +90,7 @@ class Agent:
         self.PlanRecords[period] = 'Green'
         self.Qrecords[period] = utility_handler.Lambdify_Q(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
         self.Srecords[period] = utility_handler.Lambdify_S(self.A, self.B, self.EcoCon, self.Budget, self.Price, eG, cG)
-        self.Erecords[period] = self.Qrecords[period] * eG
+        self.Erecords[period] = self.Qrecords[period] * eG * Constants.CO2PerDollar() * self.Price / 1000 # divide 1000 for kg instead of g of CO2
 
     def assign_normal(self, period, utility_handler, eN, cN):
         """
@@ -105,7 +105,7 @@ class Agent:
         self.PlanRecords[period] = 'Normal'
         self.Qrecords[period] = utility_handler.Lambdify_Q(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
         self.Srecords[period] = utility_handler.Lambdify_S(self.A, self.B, self.EcoCon, self.Budget, self.Price, eN, cN)
-        self.Erecords[period] = self.Qrecords[period] * eN
+        self.Erecords[period] = self.Qrecords[period] * eN * Constants.CO2PerDollar() * self.Price / 1000 # divide 1000 for kg instead of g of CO2
 
     def assign_budget_and_utilities_disparity(self, period, util_green, util_normal):
         """
@@ -198,25 +198,3 @@ class Agent:
     def UpdateBudget(self,period):
         # add savings
         self.Budget += Constants.FractionOfSavings() * self.Srecords[period]
-
-    def ResetAgent(self, price):
-
-
-        # Expression variables
-        self.Budget = self.BudgetHistory[0]
-        self.Price = price
-
-        # Current period props
-        self.CurrentPlan = 'Normal'  # plan defaults to normal delivery
-        self.CurrentUtility = 0
-
-        self.Qrecords = {}
-        self.Srecords = {}
-        self.BudgetHistory = {}
-        self.PlanRecords = {}
-        self.GreenUtility = {}
-        self.NormalUtility = {}
-        self.GenericUtility = {}
-
-        self.UtilityDisparity = {}
-        self.Erecords = {}
