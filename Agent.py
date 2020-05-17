@@ -68,7 +68,7 @@ class Agent:
         util_green, util_normal = self.evaluate_green_normal(utility_handler, cG, cN, eG, eN)
 
         # compare utilities
-        green_is_better = util_green > util_normal  # and util_green != util_normal  # I think this second operation is redundant
+        green_is_better = util_green > util_normal # evaluates boolean
 
         if green_is_better:
             self.assign_green(period, utility_handler, eG, cG)
@@ -76,7 +76,7 @@ class Agent:
             return util_green
 
         else:
-            self.normal = self.assign_normal(period, utility_handler, eN, cN)  # TODO: don't need "self.normal ="?
+            self.assign_normal(period, utility_handler, eN, cN)
             self.assign_budget_and_utilities_disparity(period, util_green, util_normal)
             return util_normal
     

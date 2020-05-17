@@ -17,6 +17,9 @@ Outputs of the model are saved in .csv files under the `./SavedStats` directory.
 
 Visaulisations are done in Jupyter Notebook. They can be found within the `./Visualisations` directory, which is accompanied with Python modules containing visualisation helper functions. 
 
+
+## Running the simulations
+
 #### Install Python and dependencies
 
 The application was developed in Python 3.
@@ -24,9 +27,6 @@ The application was developed in Python 3.
 To install Python code dependencies (outside of Pycharm), the easiest way is using PIP.
 
 `pip install -r requirements.txt`
-
-
-## Running the app
 
 #### Configurations
 
@@ -43,8 +43,4 @@ If everything is working properly you should see
     Initialising agent 1
     ...
 
-This means that the Engine and Agent classes are being initialised. Upon initialising, you should see
-
-     
-
-model is up has begun its simulations.
+This means that the Engine and Agent classes are being initialised. Upon initialisation, you should see that the simulations begin to run, followed by dataframes containing the statistics of the model output. 
