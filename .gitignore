@@ -144,6 +144,4 @@ cython_debug/
 
 # PyCharm
 .idea/
-
-# Folders
 SavedStats/
