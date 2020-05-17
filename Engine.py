@@ -181,6 +181,7 @@ class Engine:
             self.InflatePrices(i)
         self.ReportStatsAllStats(self.Agents, num_iterations)
         self.SaveStats(self.Agents, num_iterations, 'benchmark')
+        self.SaveAgentSample(Constants.SampleSize(), num_iterations, 'benchmark')
 
     def InflatePrices(self, period):
         """

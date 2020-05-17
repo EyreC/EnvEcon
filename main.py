@@ -33,12 +33,12 @@ def main():
     log_income_mean = np.log(median_monthly_income)  # In a normal distribution, mean = median = mode.
 
 
+
     # Running simulations
     prices_of_green_delivery = range(8, 24, 3)  # At what different prices of green delivery do you want to simulate?
     periods = 24  # How many periods for each simulation to be ran?
 
     for i in range(25): # How many times do you want the simulation to be ran? (monte carlo)
-
         # Initiate engine with input values
         engine = Engine(num_agents=num_agents, price=price_of_average_good, a_params=[alpha_a, alpha_b],
                         mu_params=[mu_a, mu_b], income_interval=[log_income_mean, log_income_std],
