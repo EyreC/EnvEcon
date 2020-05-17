@@ -146,4 +146,4 @@ cython_debug/
 .idea/
 
 # Folders
-./SavedStats
+SavedStats/
